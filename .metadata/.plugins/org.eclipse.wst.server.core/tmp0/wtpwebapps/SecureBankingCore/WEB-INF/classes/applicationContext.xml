@@ -1,0 +1,379 @@
+<?xml  version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:cxf="http://cxf.apache.org/core" xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:beans="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="
+		http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+		
+		http://cxf.apache.org/jaxrs 	http://cxf.apache.org/schemas/jaxrs.xsd
+		http://cxf.apache.org/jaxws 	http://cxf.apache.org/schemas/jaxws.xsd
+        http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/jee     http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+        http://www.springframework.org/schema/mvc     http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+        http://www.springframework.org/schema/tx      http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+        http://www.springframework.org/schema/aop     http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+        http://www.springframework.org/schema/util    http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+        
+        
+	<context:annotation-config />
+	<context:component-scan base-package="com.ng, com.ng.parking" />
+	
+	<import resource="classpath:applicationContextCommon.xml"/>
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+	<cxf:bus>
+		<cxf:features>
+			<cxf:logging />
+		</cxf:features>
+	</cxf:bus>
+
+	<jaxrs:server id="rest" address="/">
+		<jaxrs:serviceBeans>
+			<ref bean="platformService" />
+			<ref bean="pinService" />
+			<ref bean="walletService" />
+			<ref bean="issuanceService" />
+			<ref bean="agentOnboardingService" />
+			<ref bean="aniWalletService" />
+			<ref  bean="seissuanceservice"/>
+			<ref  bean="inventoryService"/>
+			<ref  bean="productsService"/>
+		</jaxrs:serviceBeans>
+		<jaxrs:providers>
+			<ref bean='jsonProvider' />
+		</jaxrs:providers>
+	</jaxrs:server>
+	   
+	<bean id="jsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJsonProvider" />	
+	
+<!-- 	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" -->
+<!-- 		p:driverClass="com.mysql.jdbc.Driver" p:jdbcUrl="jdbc:mysql://127.0.0.1:3306/securebankingdeveloper_merged" -->
+<!-- 		p:user="gopal" p:password="gopal@123!#"> -->
+ 	  
+ 	  <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		p:driverClass="com.mysql.jdbc.Driver" p:jdbcUrl="jdbc:mysql://127.0.0.1:3306/securebankingcore"
+		p:user="root" p:password="root">     
+
+		<!-- these are C3P0 properties -->
+		<property name="acquireIncrement" value="1" />
+		<property name="minPoolSize" value="3" />
+		<property name="maxPoolSize" value="5" />
+		<property name="idleConnectionTestPeriod" value="100" />
+	</bean>
+	
+	<bean class="org.springframework.orm.hibernate4.LocalSessionFactoryBean" id="sessionFactory">
+		 <property name="dataSource" ref="dataSource"></property> 
+		<!--  <property name="annotatedClasses">
+			  <list>
+			   <value>com.ng.model.Bus</value>
+			    <value>com.ng.model.ConductorMap</value>
+			    <value>com.ng.model.Station</value>
+			    <value>com.ng.model.Fare</value>
+			    <value>com.ng.model.Route</value>
+			    <value>com.ng.model.Freight</value>
+			    <value>com.ng.model.Stop</value>
+			    <value>com.ng.model.Depot</value>
+			    <value>com.ng.model.RouteStop</value>			    
+			    <value>com.ng.model.Penalty</value>
+			    <value>com.ng.model.TransitInventory</value>
+			    <value>com.ng.model.DutyRoaster</value>
+			    <value>com.ng.model.BusPassCategory</value>
+			     <value>com.ng.parking.model.ParkingLot</value>
+			     <value>com.ng.parking.model.ParkingFareCreation</value>
+			      <value>com.ng.parking.model.CustomerAllot</value>
+			     <value>com.ng.parking.model.ParkingFees</value>
+				<value>com.ng.parking.model.ParkingCompany</value>
+				<value>com.ng.parking.model.ParkingFeeDemo</value>
+					<value>com.ng.parking.model.ParkingFeeMap</value>
+ <value>com.ng.sb.common.model.AgentCommissionProductMapping</value>
+ <value>com.ng.sb.common.model.CommissionProduct</value>
+<value>com.ng.sb.common.model.ProductCommissionMapping</value>
+<value>com.ng.sb.common.model.PortalRegistration</value>
+<value>com.ng.sb.common.model.PortalUrls</value>
+<value>com.ng.sb.common.model.ProductTransactions</value> 
+<value>com.ng.sb.common.model.ProductOrders</value>
+<value>com.ng.sb.common.model.Products</value>
+<value>com.ng.sb.common.model.CardApps</value>
+<value>com.ng.sb.common.model.PayCardApps</value>
+<value>com.ng.sb.common.model.CardDetails</value>
+<value>com.ng.sb.common.model.Banks</value>
+<value>com.ng.sb.common.model.Address</value>
+<value>com.ng.sb.common.model.Country</value>
+<value>com.ng.sb.common.model.State</value>
+<value>com.ng.sb.common.model.PayCardAppPartner</value>
+<value>com.ng.sb.common.model.AccountInfo</value>
+<value>com.ng.sb.common.model.SysAccountGroup</value>
+<value>com.ng.sb.common.model.AccountLoginInfo</value>
+<value>com.ng.sb.common.model.CountryCode</value>
+<value>com.ng.sb.common.model.SysAccountType</value>
+<value>com.ng.sb.common.model.SecurityQuestion</value>
+<value>com.ng.sb.common.model.AccountInfoMapping</value>
+<value>com.ng.sb.common.model.AccountSessionInfo</value>
+<value>com.ng.sb.common.model.CustomerCallDetails</value>
+<value>com.ng.sb.common.model.CustomerComplaintInfo</value>
+<value>com.ng.sb.common.model.FaqDetails</value>
+<value>com.ng.sb.common.model.Inventory</value>
+<value>com.ng.sb.common.model.InventoryOrder</value>
+<value>com.ng.sb.common.model.Menu</value>
+<value>com.ng.sb.common.model.SelfcareLoginLogs</value>
+<value>com.ng.sb.common.model.ServiceConfig</value>
+<value>com.ng.sb.common.model.ServiceParamMapping</value>
+<value>com.ng.sb.common.model.SimPermanentBlockHistory</value>
+<value>com.ng.sb.common.model.SimReplacementDetails</value>
+<value>com.ng.sb.common.model.SimTempBlockHistory</value> 
+<value>com.ng.sb.common.model.SysConfigRange</value>
+<value>com.ng.sb.common.model.TicketQueryAssignmentInfo</value>
+<value>com.ng.sb.common.model.TicketQueryDetails</value>
+<value>com.ng.sb.common.model.TicketQueryAssignmentHistory</value>
+<value>com.ng.sb.common.model.WalletType</value>
+<value>com.ng.sb.common.model.SysCustomerCareSubMenu</value>
+<value>com.ng.sb.common.model.SysCustomerCareMenu</value>
+<value>com.ng.sb.common.model.CustomerCallVerificationInfo</value>
+<value>com.ng.sb.common.model.ComplaintSubCategoryTypes</value>
+<value>com.ng.sb.common.model.ComplaintCategoryTypes</value>
+<value>com.ng.sb.common.model.HostSubVersion</value>
+<value>com.ng.sb.common.model.MasterVersion</value>
+<value>com.ng.sb.common.model.Subscriber</value>
+<value>com.ng.sb.common.model.BoxDetails</value>
+<value>com.ng.sb.common.model.BoxSize</value>
+<value>com.ng.sb.common.model.Order</value>
+<value>com.ng.sb.common.model.OrderDetail</value>
+<value>com.ng.sb.common.model.CommissionTemplate</value>
+<value>com.ng.sb.common.model.IdProofs</value>
+<value>com.ng.sb.common.model.KYCDescriptor</value>
+<value>com.ng.sb.common.model.KYCLevel</value>
+<value>com.ng.sb.common.model.InventoryMgmt</value>
+<value>com.ng.sb.common.model.CashInDetail</value>
+<value>com.ng.sb.common.model.HostAccountInfo</value>
+<value>com.ng.sb.common.model.HostIdProofMapping</value>
+<value>com.ng.sb.common.model.HostSVFinInstrumentPartnerMapping</value>
+<value>com.ng.sb.common.model.FinancialInstrument</value>
+<value>com.ng.sb.common.model.Partner</value>
+<value>com.ng.sb.common.model.CommFinInstrumentMapping</value>
+<value>com.ng.sb.common.model.CommFspServiceMapping</value>
+<value>com.ng.sb.common.model.FSPServices</value>
+<value>com.ng.sb.common.model.CommProvPartMapping</value>
+<value>com.ng.sb.common.model.Provider</value>
+<value>com.ng.sb.common.model.HostSVFspServicesPartnerMapping</value>
+<value>com.ng.sb.common.model.HostSVProviderPartnerMapping</value>
+<value>com.ng.sb.common.model.Categories</value>
+<value>com.ng.sb.common.model.HostSVWalletMapping</value>
+<value>com.ng.sb.common.model.MerchantDetail</value>
+<value>com.ng.sb.common.model.MerchantCategory</value>
+<value>com.ng.sb.common.model.PartnerBankMapping</value>
+<value>com.ng.sb.common.model.PartnerFinInstrumentMapping</value>
+<value>com.ng.sb.common.model.PartnerFspServiceMapping</value>
+<value>com.ng.sb.common.model.PartnerProviderMapping</value>
+<value>com.ng.sb.common.model.SubscriberWallet</value>
+<value>com.ng.sb.common.model.SysMisMenu</value>
+<value>com.ng.sb.common.model.SysMisSubMenu</value>
+<value>com.ng.sb.common.model.SysConfigRangeHistory</value>
+<value>com.ng.sb.common.model.QueryTransactionInfo</value>
+<value>com.ng.sb.common.model.HostSVServiceConfigMapping</value>
+<value>com.ng.sb.common.model.SubscriberIdProofs</value>
+<value>com.ng.sb.common.model.InventoryOrderHistory</value>
+<value>com.ng.sb.common.model.ShippingDetails</value>
+<value>com.ng.sb.common.model.InventorySummary</value>
+<value>com.ng.sb.common.model.MasterVersionCategory</value>
+<value>com.ng.sb.common.model.MVWalletMapping</value>
+<value>com.ng.sb.common.model.ProductInventorySummary</value>
+<value>com.ng.sb.common.model.RangeDetails</value>
+<value>com.ng.sb.common.model.TransactionInfo</value>
+<value>com.ng.sb.common.model.BankBranches</value>
+<value>com.ng.sb.common.model.MerchantAccountInfoHistory</value>
+<value>com.ng.sb.common.model.OTAManagement</value>
+<value>com.ng.sb.common.model.HostSVWalletHistory</value>
+<value>com.ng.sb.common.model.HostSVWalletDetailHistory</value>
+<value>com.ng.sb.common.model.OTACatProviderMapping</value>
+<value>com.ng.sb.common.model.OTAServiceConfigMapping</value>
+<value>com.ng.sb.common.model.OTASubscriber</value>
+<value>com.ng.sb.common.model.OTAWalletMapping</value>
+<value>com.ng.sb.common.model.OTAWalletHistoryComparison</value>
+<value>com.ng.sb.common.model.PartnerPreference</value>
+<value>com.ng.sb.common.model.CategoryProviderMapping</value>
+<value>com.ng.sb.common.model.Otp</value>
+<value>com.ng.sb.common.model.TransactionCommition</value>
+<value>com.ng.sb.common.model.TransactionFundTransfer</value>
+<value>com.ng.sb.common.model.UserAccounts</value>
+<value>com.ng.sb.common.model.HostSVLongCodeHistory</value>
+<value>com.ng.sb.common.model.UserBiller</value>
+<value>com.ng.sb.common.model.UserIndvMerchant</value>
+<value>com.ng.sb.common.model.WalletTransaction</value>
+<value>com.ng.sb.common.model.HostSubVersionServices</value>
+<value>com.ng.sb.common.model.HostSubversionWallets</value>
+<value>com.ng.sb.common.model.HostSubversionProvidersForBillPay</value>
+    <value>com.ng.model.FareTxn</value>
+    <value>com.ng.model.VigilanceTxn</value>
+  <value>com.ng.sb.common.model.Packaging</value>
+    <value>com.ng.sb.common.model.PackingGroup</value>
+    <value>com.ng.sb.common.model.CardWallets</value>
+    <value>com.ng.sb.common.model.AccountSessionInfoSelfCare</value>
+    <value>com.ng.sb.common.model.UserWalletDetails</value>
+    <value>com.ng.sb.common.model.MasterVersionAllocatedService</value>
+ <value>com.ng.sb.common.model.MerchantDeviceMapping</value>
+<value>com.ng.sb.common.model.MerchantConfigurationSetting</value>
+	
+			  </list>
+		 </property>  -->
+  		<property name="hibernateProperties">
+			 <props>
+				  <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				  <prop key="hibernate.show_sql">true</prop>
+				  <prop key="hibernate.hbm2ddl.auto">true</prop>    
+			  </props>
+		 </property>
+	</bean> 
+
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
+		depends-on="transactionManager">
+		<property name="dataSource" ref="dataSource" />
+		<property name="persistenceUnitName" value="CUG_DS" />
+		<property name="persistenceUnitManager" ref="defaultPersistenceUnitManager" />
+	</bean>
+	<bean id="defaultPersistenceUnitManager"	
+		class="org.springframework.orm.jpa.persistenceunit.DefaultPersistenceUnitManager">
+		<property name="persistenceXmlLocation" value="classpath:spring-persistence.xml" />
+		<property name="defaultDataSource" ref="dataSource" />
+	</bean>
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<mvc:annotation-driven/>
+	
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>classpath:message</value>
+				<value>classpath:label</value>
+				<value>classpath:tafani</value>
+			</list>
+		</property>
+		<property name="useCodeAsDefaultMessage" value="true" />
+	</bean>
+
+	<bean id="disabledlable"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+
+			<value>classpath:disabledlable</value>
+		</property>
+
+	</bean>
+
+<bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+		<property name="defaultLocale" value="en" />
+	</bean>
+
+	<bean id="platformLoginData" class="com.ng.sb.common.dataobject.PlatformLoginData"/>
+
+	
+	<beans:bean id="textEncryptor"
+		class="org.springframework.security.crypto.encrypt.Encryptors"
+		factory-method="noOpText" />
+	
+	
+	
+<!-- 	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+	<property name="port" value="587" />
+		<property name="username" value="telesolutionsnextgen@gmail.com" />
+		<property name="password" value="mullah123" />
+		
+		<property name="javaMailProperties">
+			<props>
+            	<prop key="mail.smtp.auth">true</prop>
+            	<prop key="mail.smtp.starttls.enable">true</prop>
+            	  <prop key="mail.smtps.debug">true</prop>
+        	</props>
+		</property>
+		
+	</bean>
+	
+	<bean id="mailSenderUtil" class="com.ng.sb.common.util.MailSenderUtil">
+		<property name="mailSender" ref="mailSender" />
+		<property name="simpleMailMessage" ref="customeMailMessage" />
+	</bean>
+	
+	<bean id="customeMailMessage"
+		class="org.springframework.mail.SimpleMailMessage">
+		<property name="from" value="telesolutionsnextgen@gmail.com" />
+		<property name="to" value="telesolutionsnextgen.com" />
+		<property name="subject" value="Testing Subject" />
+		<property name="text">
+		<value>
+			<![CDATA[
+				Dear %s,
+				Mail Content : %s
+			]]>
+		</value>
+	</property>
+	</bean>
+	 -->
+	
+	
+	<!-- 
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+		<property name="port" value="587" />
+		<property name="username" value="Nextgen" />
+		<property name="password" value="mullah123" />
+		<property name="javaMailProperties">
+		<props>
+			<prop key="mail.smtp.auth">true</prop>
+			<prop key="mail.smtp.starttls.enable">true</prop>
+		</props>
+		</property>
+	</bean>
+	
+	<bean id="mailSenderUtil" class="com.ng.sb.common.util.MailSenderUtil">
+		<property name="mailSender" ref="mailSender" />
+	</bean>
+	<bean id="mailSenderUtil" class="com.ng.sb.common.util.MailSenderUtil">
+		<property name="mailSender" ref="mailSender" />
+		<property name="simpleMailMessage" ref="customeMailMessage" />
+	</bean>
+	
+	<bean id="customeMailMessage"
+		class="org.springframework.mail.SimpleMailMessage">
+		<property name="from" value="from@no-spam.com" />
+		<property name="to" value="to@no-spam.com" />
+		<property name="subject" value="Testing Subject" />
+		<property name="text">
+		<value>
+			<![CDATA[
+				Dear %s,
+				Mail Content : %s
+			]]>
+		</value>
+	</property>
+	</bean> -->
+		<mvc:interceptors>
+		<mvc:interceptor>
+		<mvc:mapping path="/**" />
+		<beans:bean class="com.ng.sb.utils.AuditInterceptor"> </beans:bean>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+		 	<mvc:exclude-mapping path="/login/getLoginPage"/>
+		 	<mvc:exclude-mapping path="/UserMgmt/forgetPassword"/>
+		 	<mvc:exclude-mapping path="/UserMgmt/changePassword"/>
+			<mvc:exclude-mapping path="/login/validateAccount"/>
+			<mvc:exclude-mapping path="/login/logout"/>
+			<mvc:exclude-mapping path="/common/getErrorPage"/>
+			<mvc:exclude-mapping path="/login/layoutUser"/>
+			<mvc:exclude-mapping path="/services/**"/>
+			<mvc:exclude-mapping path="/**/ajax/**"/>
+			<beans:bean class="com.ng.sb.utils.AuthorizationInterceptor"></beans:bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+</beans>

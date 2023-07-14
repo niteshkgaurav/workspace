@@ -1,0 +1,6 @@
+#Tomcat publish data
+#Fri Jul 14 15:26:04 IST 2023
+org.eclipse.jst.jee.server\:/binary\:C\:\\Users\\satyendra.CORP\\.m2\\repository\\org\\springframework\\spring-web\\4.3.0.RELEASE\\spring-web-4.3.0.RELEASE.jar=WEB-INF/lib/spring-web-4.3.0.RELEASE.jar
+org.eclipse.jst.j2ee.server\:Common=WEB-INF/lib/Common-1.0.jar
+org.eclipse.jst.jee.server\:/binary\:C\:\\Users\\satyendra.CORP\\.m2\\repository\\org\\apache\\tomcat\\embed\\tomcat-embed-websocket\\8.5.11\\tomcat-embed-websocket-8.5.11.jar=WEB-INF/lib/tomcat-embed-websocket-8.5.11.jar
+org.eclipse.jst.jee.server\:/binary\:C\:\\Users\\satyendra.CORP\\.m2\\repository\\org\\springframework\\spring-web\\4.3.7.RELEASE\\spring-web-4.3.7.RELEASE.jar=WEB-INF/lib/spring-web-4.3.7.RELEASE.jar

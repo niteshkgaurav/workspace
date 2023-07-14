@@ -1,0 +1,2189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+      "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" 
+      "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+
+<tiles-definitions>
+	<definition name="layouthome" template="/views/layout.jsp">
+		<put-attribute name="header" value="/views/header.jsp" />
+		<put-attribute name="menu" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/views/footer.jsp" />
+	</definition>
+
+	<definition name="layouthome2" template="/views/layout1.jsp">
+		<put-attribute name="header" value="/views/headerOfFistTime.jsp" />
+
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/views/footer.jsp" />
+	</definition>
+
+
+	<!-- <definition name="login" extends="layouthome"> <put-attribute name="header" 
+		value="/views/header.jsp"/> <put-attribute name="body" value="/views/login.jsp"/> 
+		<put-attribute name="footer" value="/views/footer.jsp"/> </definition> -->
+
+
+	<definition name="homepage" extends="layouthome">
+		<put-attribute name="title" value="hompeage" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/homepage.jsp" />
+	</definition>
+
+	<definition name="HostOwnerMgmt" extends="layouthome">
+		<put-attribute name="title" value="Card Owner Management" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostOwnerMgmt.jsp" />
+	</definition>
+
+	<definition name="HostSubVersion" extends="layouthome">
+		<put-attribute name="title" value="Host Sub Version" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostSubVersion.jsp" />
+	</definition>
+
+	<definition name="HostSubVersionList" extends="layouthome">
+		<put-attribute name="title" value="Host Sub Version" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostSubVersionList.jsp" />
+	</definition>
+
+	<definition name="HostSubVersionEdit" extends="layouthome">
+		<put-attribute name="title" value="Host Sub Version Edit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostSubVersionEdit.jsp" />
+	</definition>
+	<!--Upload Excel File Inventory Page -->
+	<definition name="UploadExcelFileInventoryPage" extends="layouthome">
+		<put-attribute name="title" value="Upload Excwl File Inventory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/UploadExcelFileInventoryPage.jsp" />
+	</definition>
+
+	<!-- -Inventory PO Inventory Preview Page -->
+	<definition name="InventoryShippingPreviewPage" extends="layouthome">
+		<put-attribute name="title" value="InventoryShippingPreviewPage" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InventoryShippingPreviewPage.jsp" />
+	</definition>
+
+	<!-- -Inventory PO Raise Page -->
+	<definition name="InventoryPoRaisePage" extends="layouthome">
+		<put-attribute name="title" value="InventoryPoRaisePage" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryPoRaisePage.jsp" />
+	</definition>
+
+	<!-- -Inventory Order History -->
+	<definition name="InventoryOrderHistory" extends="layouthome">
+		<put-attribute name="title" value="InventoryOrderHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryOrderHistory.jsp" />
+	</definition>
+
+	<!-- -Inventory Shipping -->
+	<definition name="InventoryShipping" extends="layouthome">
+		<put-attribute name="title" value="InventoryShipping" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryShipping.jsp" />
+	</definition>
+
+	<!-- -Inventory Shipping Range Details Page -->
+	<definition name="InventoryRangeDetailsPage" extends="layouthome">
+		<put-attribute name="title" value="InventoryRangeDetailsPage" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InventoryRangeDetailsPage.jsp" />
+	</definition>
+
+	<!-- Excel sheet download -->
+	<definition name="MasterVersionOrderSheet" extends="layouthome">
+		<put-attribute name="title" value="Master Version Order Sheet" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MasterVersionOrderSheet.jsp" />
+	</definition>
+
+	<!-- UserLoginCreation Page -->
+	<definition name="UserLoginCreation" extends="layouthome">
+		<put-attribute name="title" value="User Login Creation Page" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/UserLoginCreation.jsp" />
+	</definition>
+
+	<!-- UserLoginList -->
+	<definition name="UserLoginList" extends="layouthome">
+		<put-attribute name="title" value="User Login List Page" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/UserLoginList.jsp" />
+	</definition>
+	<!-- UserLoginEdit -->
+	<definition name="UserLoginEdit" extends="layouthome">
+		<put-attribute name="title" value="User Login Edit Page" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/UserLoginEdit.jsp" />
+	</definition>
+
+	<definition name="ChangePassword" extends="layouthome">
+		<put-attribute name="title" value="ChangePassword" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ChangePassword.jsp" />
+	</definition>
+	<!-- -ResetPassword -->
+	<definition name="resetPassword" extends="layouthome">
+		<put-attribute name="title" value="Reset Password Page" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ResetPassword.jsp" />
+	</definition>
+	<!-- firstTimeLogin Page -->
+	<definition name="firstTimeLogin" extends="layouthome2">
+		<put-attribute name="title" value="First Time Login Page" />
+		<put-attribute name="body" value="/views/FirstTimeLoginPage.jsp" />
+	</definition>
+
+	<definition name="HostRegistration" extends="layouthome">
+		<put-attribute name="title" value="HostRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostRegistration.jsp" />
+	</definition>
+
+	<definition name="HostConfiguration" extends="layouthome">
+		<put-attribute name="title" value="HostConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostConfiguration.jsp" />
+	</definition>
+	<!-- -add paymet- config in host transaction -->
+	<definition name="HostPaymentTransaction" extends="layouthome">
+		<put-attribute name="title" value="HostPaymentTransaction" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostPaymentTransaction.jsp" />
+	</definition>
+
+	<definition name="HostTransaction" extends="layouthome">
+		<put-attribute name="title" value="HostTransaction" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostTransaction.jsp" />
+	</definition>
+
+	<!-- - product Category create edit delete -->
+	<definition name="ProductCategory" extends="layouthome">
+		<put-attribute name="title" value="ProductCategoryManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ProductCategory.jsp" />
+	</definition>
+	<definition name="ProductCategory_edit" extends="layouthome">
+		<put-attribute name="title" value="ProductCategoryManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ProductCategory_edit.jsp" />
+	</definition>
+
+	<definition name="EditSubQuery" extends="layouthome">
+		<put-attribute name="title" value="EditSubQuery" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/EditSubQuery.jsp" />
+	</definition>
+
+	<definition name="priority" extends="layouthome">
+		<put-attribute name="title" value="queryPriorityId" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/priority.jsp" />
+	</definition>
+
+
+	<definition name="QueryResolutionTime" extends="layouthome">
+		<put-attribute name="title" value="QueryResolutionTime" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/QueryResolutionTime.jsp" />
+	</definition>
+
+	<!-- Commission Template -->
+	<definition name="CommissionTemplate" extends="layouthome">
+		<put-attribute name="title" value="CommissionTemplate" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CommissionTemplate.jsp" />
+	</definition>
+
+	<!-- - unit Manement -->
+	<definition name="UnitsManagement" extends="layouthome">
+		<put-attribute name="title" value="UnitManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/UnitsManagement.jsp" />
+	</definition>
+
+	<definition name="ProductUnit_edit" extends="layouthome">
+		<put-attribute name="title" value="UnitManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ProductUnit_edit.jsp" />
+	</definition>
+
+	<!-- Product Management -->
+	<definition name="Product_Management" extends="layouthome">
+		<put-attribute name="title" value="UnitManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Product_Management.jsp" />
+	</definition>
+
+	<definition name="Product_Management_new" extends="layouthome">
+		<put-attribute name="title" value="UnitManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Product_Management_new.jsp" />
+	</definition>
+
+	<definition name="Product_edit" extends="layouthome">
+		<put-attribute name="title" value="UnitManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Product_edit.jsp" />
+	</definition>
+
+
+	<!-- - Sim services management -->
+
+	<definition name="SimServiceManagement" extends="layouthome">
+		<put-attribute name="title" value="SimServiceManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SimServiceManagement.jsp" />
+	</definition>
+
+
+	<definition name="SimServiceConfirmation" extends="layouthome">
+		<put-attribute name="title" value="SimServiceManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SimServiceConfirmation.jsp" />
+	</definition>
+
+	<definition name="EngagedSim_Services" extends="layouthome">
+		<put-attribute name="title" value="SimServiceManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/EngagedSim_Services.jsp" />
+	</definition>
+
+
+	<definition name="EngagedSimVersion_Services_Edit" extends="layouthome">
+		<put-attribute name="title" value="SimServiceManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/EngagedSimVersion_Services_Edit.jsp" />
+	</definition>
+
+	<!-- ########################## Customer Sim Inventory #################### -->
+	<definition name="CustomerInventory" extends="layouthome">
+		<put-attribute name="title" value="CustomerSimInventory" />
+		<put-attribute name="body" value="/views/CustomerInventory.jsp" />
+	</definition>
+	<!-- ########################## Retailer Sim With RFID Inventory #################### -->
+	<definition name="RetailerInventory" extends="layouthome">
+		<put-attribute name="title" value="RetailerSimInventory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RetailerInventory.jsp" />
+	</definition>
+	<!-- ########################## Customer RFID Inventory #################### -->
+	<definition name="CustomerRFIDInventory" extends="layouthome">
+		<put-attribute name="title" value="CustomerRFIDInventory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CustomerRFIDInventory.jsp" />
+	</definition>
+	<!-- ########################## Retailer RFID Inventory #################### -->
+	<definition name="RetailerRFIDInventory" extends="layouthome">
+		<put-attribute name="title" value="RetailerRFIDInventory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RetailerRFIDInventory.jsp" />
+	</definition>
+	<!-- ########################## Retailer RFID Reader Inventory #################### -->
+	<definition name="RetailerRFIDReaderInventory" extends="layouthome">
+		<put-attribute name="title" value="RetailerRFIDReaderInventory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerRFIDReaderInventory.jsp" />
+	</definition>
+	<!-- ########################## Retailer Sim Inventory #################### -->
+	<definition name="RetailerSIMInventory" extends="layouthome">
+		<put-attribute name="title" value="RetailerSIMInventory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RetailerSIMInventory.jsp" />
+	</definition>
+	<!-- ########################## Retailer SIM With Reader Inventory #################### -->
+	<definition name="RetailerSIMWithReader" extends="layouthome">
+		<put-attribute name="title" value="RetailerSIMWithReader" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RetailerSIMWithReader.jsp" />
+	</definition>
+
+	<!-- Host Transaction Mnagemnet (add and edit ) by moin -->
+
+	<definition name="HostTransactionAdd" extends="layouthome">
+		<put-attribute name="title" value="HostTransactionManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostTransactionAdd.jsp" />
+	</definition>
+
+	<definition name="HostTransactionEdit" extends="layouthome">
+		<put-attribute name="title" value="HostTransactionManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostTransactionEdit.jsp" />
+	</definition>
+
+	<definition name="HostStkMenus" extends="layouthome">
+		<put-attribute name="title" value="HostTransactionManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostStkMenus.jsp" />
+	</definition>
+
+	<definition name="SubscriberRegistration" extends="layouthome">
+		<put-attribute name="title" value="SubscriberRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SubscriberRegistration.jsp" />
+	</definition>
+
+	<!-- - Destributer(Retailer) add by Moin -->
+	<definition name="RetailerRegistation" extends="layouthome">
+		<put-attribute name="title" value="RetailerRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RetailerRegistation.jsp" />
+	</definition>
+
+
+	<definition name="RetailerAccountConfiguration" extends="layouthome">
+		<put-attribute name="title" value="RetailerAccountConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerAccountConfiguration.jsp" />
+	</definition>
+
+	<definition name="RetailerTransactionConfiguration" extends="layouthome">
+		<put-attribute name="title" value="RetailerTransactionConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerTransactionConfiguration.jsp" />
+	</definition>
+
+	<!-- SubDistributor Registration Module jsp -->
+	<definition name="SubDistributorRegistation" extends="layouthome">
+		<put-attribute name="title" value="SubDistributorRegistation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorRegistation.jsp" />
+	</definition>
+	<definition name="SubDistributorAccountConfiguration"
+		extends="layouthome">
+		<put-attribute name="title" value="SubDistributorAccountConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorAccountConfiguration.jsp" />
+	</definition>
+	<definition name="SubDistributorTransactionConfiguration"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="SubDistributorTransactionConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorTransactionConfiguration.jsp" />
+	</definition>
+
+	<!-- -BC(Bussiness Correspondence Registration) -->
+	<definition name="BCRegistation" extends="layouthome">
+		<put-attribute name="title" value="BCRegistation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/BCRegistation.jsp" />
+	</definition>
+	<!-- -Puchasing Order Management -->
+	<definition name="InventoryOrder" extends="layouthome">
+		<put-attribute name="title" value="InventoryOrder" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryOrder.jsp" />
+	</definition>
+	<definition name="DistributorInventoryOrder" extends="layouthome">
+		<put-attribute name="title" value="DistributorInventoryOrder" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorInventoryOrder.jsp" />
+	</definition>
+	<definition name="SubDistributorInventoryOrder" extends="layouthome">
+		<put-attribute name="title" value="SubDistributorInventoryOrder" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorInventoryOrder.jsp" />
+	</definition>
+	<definition name="RetailerInventoryOrder" extends="layouthome">
+		<put-attribute name="title" value="RetailerInventoryOrder" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RetailerInventoryOrder.jsp" />
+	</definition>
+	<!-- order history In case of PO allocation -->
+	<definition name="InventoryOrderHistory_hostList" extends="layouthome">
+		<put-attribute name="title" value="InventoryOrderHistory_hostList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InventoryOrderHistory_hostList.jsp" />
+	</definition>
+
+	<definition name="InventoryOrderHistory_distributorList"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="InventoryOrderHistory_distributorList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InventoryOrderHistory_distributorList.jsp" />
+	</definition>
+
+	<definition name="InventoryOrderHistory_subdistributorList"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="InventoryOrderHistory_subdistributorList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InventoryOrderHistory_subdistributorList.jsp" />
+	</definition>
+
+	<definition name="InventoryOrderHistory" extends="layouthome">
+		<put-attribute name="title" value="InventoryOrderHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryOrderHistory.jsp" />
+	</definition>
+	<definition name="DistributorInventoryOrderHistory" extends="layouthome">
+		<put-attribute name="title" value="DistributorInventoryOrderHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorInventoryOrderHistory.jsp" />
+	</definition>
+	<definition name="SubDistributorInventoryOrderHistory"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="SubDistributorInventoryOrderHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorInventoryOrderHistory.jsp" />
+	</definition>
+	<definition name="RetailerInventoryOrderHistory" extends="layouthome">
+		<put-attribute name="title" value="RetailerInventoryOrderHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerInventoryOrderHistory.jsp" />
+	</definition>
+
+	<!-- Order Allocation History -->
+
+	<definition name="InventoryAllocationHistory" extends="layouthome">
+		<put-attribute name="title" value="InventoryAllocationHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InventoryAllocationHistory.jsp" />
+	</definition>
+
+	<definition name="DistributorPOAllocationHistory" extends="layouthome">
+		<put-attribute name="title" value="DistributorPOAllocationHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorPOAllocationHistory.jsp" />
+	</definition>
+	<definition name="SubDistributorPOAllocationHistory"
+		extends="layouthome">
+		<put-attribute name="title" value="SubDistributorPOAllocationHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorPOAllocationHistory.jsp" />
+	</definition>
+
+	<definition name="RetailerPOAllocationHistory" extends="layouthome">
+		<put-attribute name="title" value="RetailerPOAllocationHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerPOAllocationHistory.jsp" />
+	</definition>
+
+	<!-- Order Summary List of LoggedIn user -->
+
+	<definition name="OrderSummary" extends="layouthome">
+		<put-attribute name="title" value="OrderSummary" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OrderSummary.jsp" />
+	</definition>
+	<!-- Order summary History By order Number -->
+	<definition name="OrderSummaryHistory" extends="layouthome">
+		<put-attribute name="title" value="OrderSummaryHistory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OrderSummaryHistory.jsp" />
+	</definition>
+
+	<!-- HostDistributorMappingMgmnt By Host -->
+	<definition name="HostDistributorMappingMgmnt" extends="layouthome">
+		<put-attribute name="title" value="HostDistributorMappingMgmnt" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostDistributorMappingMgmnt.jsp" />
+	</definition>
+	<!-- HostPaymentPartnerMappingMgmnt By Host -->
+	<definition name="HostPaymentPartnerMappingMgmnt" extends="layouthome">
+		<put-attribute name="title" value="HostPaymentPartnerMappingMgmnt" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostPaymentPartnerMappingMgmnt.jsp" />
+	</definition>
+
+	<!-- HostSimVersionMappingMgmnt By Host -->
+	<definition name="HostSimVersionCreation" extends="layouthome">
+		<put-attribute name="title" value="HostSimVersionCreation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostSimVersionCreation.jsp" />
+	</definition>
+
+	<!-- HostSimVersionModifiedMappingMgmnt By Host -->
+	<definition name="HostSimModifiedVersionget" extends="layouthome">
+		<put-attribute name="title" value="HostSimModifiedVersionget" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostSimModifiedVersionget.jsp" />
+	</definition>
+
+
+	<!-- MasterVersionCreation By Host -->
+	<definition name="MasterVersionCreation" extends="layouthome">
+		<put-attribute name="title" value="MasterVersionCreation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MasterVersionCreation.jsp" />
+	</definition>
+
+	<!-- ====== Written by Ram Kumar[3-6-2015] ========== -->
+	<!-- ======== HostDetails ======= -->
+	<definition name="HostDetails" extends="layouthome">
+		<put-attribute name="title" value="HostDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostDetails.jsp" />
+	</definition>
+
+	<!-- ====== Written by Ram Kumar[3-6-2015] ========== -->
+	<!-- ======== HostRegistrationEdit ======= -->
+	<definition name="HostRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="HostRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostRegistrationEdit.jsp" />
+	</definition>
+
+	<!-- ====== Written by Ram Kumar[3-6-2015] ========== -->
+	<!-- ======== HostAccountConfigurationEdit ======= -->
+	<definition name="HostAccountConfigurationEdit" extends="layouthome">
+		<put-attribute name="title" value="HostAccountConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostAccountConfigurationEdit.jsp" />
+	</definition>
+
+
+	<!-- ====== Written by Ram Kumar[3-6-2015] ========== -->
+	<!-- ======== HostTransactionConfigurationEdit ======= -->
+	<definition name="HostTransactionConfigurationEdit" extends="layouthome">
+		<put-attribute name="title" value="HostTransactionConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostTransactionConfigurationEdit.jsp" />
+	</definition>
+
+
+	<!-- ====== Written by Ram Kumar[21-5-2015] ========== -->
+	<!-- ======== DistributorDetails ======= -->
+	<definition name="DistributorDetails" extends="layouthome">
+		<put-attribute name="title" value="DistributorDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/DistributorDetails.jsp" />
+	</definition>
+
+	<!-- ====== Written by Ram Kumar[21-5-2015] ========== -->
+	<!-- ======== DistributorRegistrationEdit ======= -->
+	<definition name="DistributorRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="DistributorRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorRegistrationEdit.jsp" />
+	</definition>
+	<!-- ====== Written by Ram Kumar[21-5-2015] ========== -->
+	<!-- ======== DistributorAccountConfigurationEdit ======= -->
+	<definition name="DistributorAccountConfigurationEdit"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="DistributorAccountConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorAccountConfigurationEdit.jsp" />
+	</definition>
+	<!-- ====== Written by Ram Kumar[21-5-2015] ========== -->
+	<!-- ======== DistributorTransactionConfigurationEdit ======= -->
+	<definition name="DistributorTransactionConfigurationEdit"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="DistributorTransactionConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorTransactionConfigurationEdit.jsp" />
+	</definition>
+
+
+	<definition name="DistributorAccountConfiguration" extends="layouthome">
+		<put-attribute name="title" value="DistributorAccountConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorAccountConfiguration.jsp" />
+	</definition>
+
+	<definition name="DistributorRegistation" extends="layouthome">
+		<put-attribute name="title" value="DistributorRegistation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/DistributorRegistation.jsp" />
+	</definition>
+
+	<definition name="DistributorTransactionConfiguration"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="DistributorTransactionConfiguration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/DistributorTransactionConfiguration.jsp" />
+	</definition>
+
+
+	<!-- ====== Written by Ram Kumar[11-6-2015] ========== -->
+	<!-- ======== SubDistributorDetails ======= -->
+	<definition name="SubDistributorDetails" extends="layouthome">
+		<put-attribute name="title" value="SubDistributorDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SubDistributorDetails.jsp" />
+	</definition>
+	<!-- ======== SubDistributorRegistrationEdit ======= -->
+	<definition name="SubDistributorRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="SubDistributorRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorRegistrationEdit.jsp" />
+	</definition>
+	<!-- ======== SubDistributorAccountConfigurationEdit ======= -->
+	<definition name="SubDistributorAccountConfigurationEdit"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="SubDistributorAccountConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorAccountConfigurationEdit.jsp" />
+	</definition>
+	<!-- ======== SubDistributorTransactionConfigurationEdit ======= -->
+	<definition name="SubDistributorTransactionConfigurationEdit"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="SubDistributorTransactionConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubDistributorTransactionConfigurationEdit.jsp" />
+	</definition>
+
+	<!-- ====== Written by Ram Kumar[15-6-2015] ========== -->
+	<!-- ======== retailer_details======= -->
+	<definition name="retailer_details" extends="layouthome">
+		<put-attribute name="title" value="retailer_details" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/retailer_details.jsp" />
+	</definition>
+	<!-- ====== Written by Ram Kumar[15-6-2015] ========== -->
+	<!-- ======== RetailerRegistrationEdit======= -->
+	<definition name="RetailerRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="RetailerRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerRegistrationEdit.jsp" />
+	</definition>
+
+	<definition name="RetailerAccountConfigurationEdit" extends="layouthome">
+		<put-attribute name="title" value="RetailerAccountConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerAccountConfigurationEdit.jsp" />
+	</definition>
+	<!-- ======== RetailerTransactionConfigurationEdit======= -->
+	<definition name="RetailerTransactionConfigurationEdit"
+		extends="layouthome">
+		<put-attribute name="title"
+			value="RetailerTransactionConfigurationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/RetailerTransactionConfigurationEdit.jsp" />
+	</definition>
+	<!-- ======== BCDetails======= -->
+	<definition name="BCDetails" extends="layouthome">
+		<put-attribute name="title" value="BCDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/BCDetails.jsp" />
+	</definition>
+	<!-- ======== BCRegistrationEdit======= -->
+	<definition name="BCRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="BCRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/BCRegistrationEdit.jsp" />
+	</definition>
+
+
+
+	<!-- =========for Country Details============= -->
+	<definition name="Country" extends="layouthome">
+		<put-attribute name="title" value="Country" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Country.jsp" />
+	</definition>
+
+	<!-- =========for State Details============= -->
+	<definition name="State" extends="layouthome">
+		<put-attribute name="title" value="State" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/State.jsp" />
+	</definition>
+
+
+	<definition name="MasterVersionCreation" extends="layouthome">
+		<put-attribute name="title" value="MasterVersionCreation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MasterVersionCreation.jsp" />
+	</definition>
+
+
+	<definition name="subscriber" extends="layouthome">
+		<put-attribute name="title" value="subscriber" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/subscriber.jsp" />
+	</definition>
+
+	<definition name="SubscriberRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="SubscriberRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubscriberRegistrationEdit.jsp" />
+	</definition>
+
+	<!-- =========for Edit Inventory============= -->
+	<definition name="InventoryTracking" extends="layouthome">
+		<put-attribute name="title" value="InventoryTracking" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryTracking.jsp" />
+	</definition>
+
+	<definition name="STKLinkApprovedByAdmin" extends="layouthome">
+		<put-attribute name="title" value="STKLinkApprovedByAdmin" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/STKLinkApprovedByAdmin.jsp" />
+	</definition>
+
+	<definition name="CommissionTemplateDetails" extends="layouthome">
+		<put-attribute name="title" value="CommissionTemplateDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/CommissionTemplateDetails.jsp" />
+	</definition>
+
+	<definition name="CommissionTemplateEdit" extends="layouthome">
+		<put-attribute name="title" value="CommissionTemplateEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CommissionTemplateEdit.jsp" />
+	</definition>
+	<!-- ======== for Payment Partner Registration ========== -->
+	<definition name="PaymentPartnerRegistration" extends="layouthome">
+		<put-attribute name="title" value="PaymentPartnerRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/PaymentPartnerRegistration.jsp" />
+
+	</definition>
+	<!-- ======= for Payment Partner Registration Edit ======== -->
+	<definition name="PaymentPartnerRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="PaymentPartnerRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/PaymentPartnerRegistrationEdit.jsp" />
+	</definition>
+	<!-- ======= for Payment Partner Services ======== -->
+	<definition name="PaymentPartnerServices" extends="layouthome">
+		<put-attribute name="title" value="PaymentPartnerServices" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PaymentPartnerServices.jsp" />
+	</definition>
+
+
+	<!-- ======== for Payment Provider Registration ========== -->
+	<definition name="PaymentProviderRegistration" extends="layouthome">
+		<put-attribute name="title" value="PaymentProviderRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/PaymentProviderRegistration.jsp" />
+
+	</definition>
+
+
+	<definition name="ServiceProviderRegistration" extends="layouthome">
+		<put-attribute name="title" value="ServiceProviderRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/ServiceProviderRegistration.jsp" />
+
+	</definition>
+
+	<!-- ======= for Payment Provider Registration Edit ======== -->
+	<definition name="PaymentProviderRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="PaymentProviderRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/PaymentProviderRegistrationEdit.jsp" />
+	</definition>
+
+	<!-- ======= for Provider Mapping ======== -->	
+	<definition name="ProviderMapping" extends="layouthome">
+		<put-attribute name="title" value="ServiceProviderMapping" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/ProviderMapping.jsp" />
+	</definition>
+
+	<!-- ======= for Payment Provider Services ======== -->
+	<definition name="PaymentProviderServices" extends="layouthome">
+		<put-attribute name="title" value="PaymentProviderServices" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PaymentProviderServices.jsp" />
+	</definition>
+
+	<!-- ======= for Transaction Logs ======== -->	
+	<definition name="TransactionLogs" extends="layouthome">
+		<put-attribute name="title" value="CustomerTransactionLogs" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/transactionLogs.jsp" />
+	</definition>
+
+	<definition name="TransactionMenuLogs" extends="layouthome">
+		<put-attribute name="title" value="CustomerTransactionMenuLogs" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/transactionMenuLogs.jsp" />
+	</definition>
+
+	<!-- ======= for Internal Wallet Registration ====== -->
+	<definition name="InternalWalletRegistration" extends="layouthome">
+		<put-attribute name="title" value="InternalWalletRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/InternalWalletRegistration.jsp" />
+	</definition>
+	<!-- ======= for Host Partner Wallet Mapping Edit ======== -->
+	<definition name="HostPaymentPartnerMappingMgmntEdit"
+		extends="layouthome">
+		<put-attribute name="title" value="HostPaymentPartnerMappingMgmntEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostPaymentPartnerMappingMgmntEdit.jsp" />
+	</definition>
+	<definition name="HostPaymentPartnerMappingMgmnt" extends="layouthome">
+		<put-attribute name="title" value="HostPaymentPartnerMappingMgmnt" />
+		<put-attribute name="body"
+			value="/views/HostPaymentPartnerMappingMgmnt.jsp" />
+	</definition>
+	<definition name="HostPartnerWalletMappingEdit" extends="layouthome">
+		<put-attribute name="title" value="HostPartnerWalletMappingEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostPartnerWalletMappingEdit.jsp" />
+	</definition>
+
+
+	<definition name="cashInTemplate" extends="layouthome">
+		<put-attribute name="title" value="cashInTemplate" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/cashInTemplate.jsp" />
+	</definition>
+	<definition name="AccountCreation" extends="layouthome">
+		<put-attribute name="title" value="AccountCreation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/AccountCreation.jsp" />
+	</definition>
+	<definition name="account" extends="layouthome">
+		<put-attribute name="title" value="account" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/account.jsp" />
+	</definition>
+	<definition name="accountList" extends="layouthome">
+		<put-attribute name="title" value="accountList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/accountList.jsp" />
+	</definition>
+	<definition name="accountEdit" extends="layouthome">
+		<put-attribute name="title" value="accountEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/accountEdit.jsp" />
+	</definition>
+	<!-- ======= for External Wallet FSP Registration ====== -->
+	<definition name="ExternalWalletFSPRegistration" extends="layouthome">
+		<put-attribute name="title" value="ExternalWalletFSPRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/ExternalWalletFSPRegistration.jsp" />
+	</definition>
+
+	<definition name="HostSimVersionEditPage" extends="layouthome">
+		<put-attribute name="title" value="HostSimVersionEditPage" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostSimVersionEditPage.jsp" />
+	</definition>
+
+	<!-- OTA Screen -->
+	<definition name="OTAMgmtSubscriberList" extends="layouthome">
+		<put-attribute name="title" value="OTAMgmtSubscriberList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OTAMgmtSubscriberList.jsp" />
+	</definition>
+
+	<definition name="UserForgetPassword" extends="layouthome2">
+		<put-attribute name="title" value="UserForgetPassword" />
+		<put-attribute name="body" value="/views/UserForgetPassword.jsp" />
+	</definition>
+	<!-- OTA Host Configuration Screen -->
+	<definition name="OTAHostConfigurations" extends="layouthome">
+		<put-attribute name="title" value="OTAHostConfigurations" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OTAHostConfigurations.jsp" />
+	</definition>
+
+	<definition name="IDProofs" extends="layouthome">
+		<put-attribute name="title" value="IDProofs" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/IDProofs.jsp" />
+	</definition>
+	<!-- MerchantConfiguration -->
+	<definition name="MerchantConfiguration" extends="layouthome">
+		<put-attribute name="title" value="Merchant Configuration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MerchantConfiguration.jsp" />
+	</definition>
+
+	<definition name="PartnerPreference" extends="layouthome">
+		<put-attribute name="title" value="Merchant Configuration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PartnerPreference.jsp" />
+	</definition>
+
+	<definition name="Partner" extends="layouthome">
+		<put-attribute name="title" value="Partner" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Partner.jsp" />
+	</definition>
+
+	<definition name="PartnerList" extends="layouthome">
+		<put-attribute name="title" value="PartnerList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PartnerList.jsp" />
+	</definition>
+
+	<definition name="PartnerEdit" extends="layouthome">
+		<put-attribute name="title" value="PartnerEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PartnerEdit.jsp" />
+	</definition>
+
+	<!-- SEEntriesUpload -->
+	<definition name="SEEntriesUpload" extends="layouthome">
+		<put-attribute name="title"
+			value="Secure Elements Entries Upload from Excel" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SEEntriesUpload.jsp" />
+	</definition>
+
+	<definition name="PartnerCommission" extends="layouthome">
+		<put-attribute name="title" value="PartnerCommission" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/partnerCommission.jsp" />
+	</definition>
+
+	<definition name="addProvider" extends="layouthome">
+		<put-attribute name="title" value="addProvider" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/addProvider.jsp" />
+	</definition>
+
+	<definition name="MasterVersionEdit" extends="layouthome">
+		<put-attribute name="title" value="MasterVersionEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MasterVersionEdit.jsp" />
+	</definition>
+
+	<definition name="bulkSeIssuance" extends="layouthome">
+		<put-attribute name="title" value="bulkSeIssuance" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/bulkSeIssuance.jsp" />
+	</definition>
+
+
+	<definition name="PartnerPreferenceManagement" extends="layouthome">
+		<put-attribute name="title" value="PartnerPreferenceManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/PartnerPreferenceManagement.jsp" />
+	</definition>
+
+
+	<definition name="editPartnerPreference" extends="layouthome">
+		<put-attribute name="title" value="editPartnerPreference" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/editPartnerPreference.jsp" />
+	</definition>
+
+	<definition name="ProductCategory" extends="layouthome">
+		<put-attribute name="title" value="ProductCategory" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ProductCategory.jsp" />
+	</definition>
+
+	<definition name="ProductCategory_edit" extends="layouthome">
+		<put-attribute name="title" value="ProductCategory_edit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ProductCategory_edit.jsp" />
+	</definition>
+
+	<definition name="MerchantRegistration" extends="layouthome">
+		<put-attribute name="title" value="MerchantRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MerchantRegistration.jsp" />
+	</definition>
+
+
+	<definition name="OTAScreen" extends="layouthome">
+		<put-attribute name="title" value="OTAScreen" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OTAScreen.jsp" />
+	</definition>
+
+
+	<definition name="OTASubscriberScreen" extends="layouthome">
+		<put-attribute name="title" value="OTASubscriberScreen" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OTASubscriberScreen.jsp" />
+	</definition>
+	<definition name="OTASubscriberScreenActive" extends="layouthome">
+		<put-attribute name="title" value="OTASubscriberScreenActive" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/OTASubscriberScreenActive.jsp" />
+	</definition>
+
+	<definition name="portalRegistration" extends="layouthome">
+		<put-attribute name="title" value="portalRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/portalRegistration.jsp" />
+	</definition>
+
+	<definition name="portalRegistrationList" extends="layouthome">
+		<put-attribute name="title" value="portalRegistrationList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/portalRegistrationList.jsp" />
+	</definition>
+
+	<definition name="PortelUpdateEdit" extends="layouthome">
+		<put-attribute name="title" value="PortelUpdateEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PortelUpdateEdit.jsp" />
+	</definition>
+
+	<definition name="DenominationCreation" extends="layouthome">
+		<put-attribute name="title" value="DenominationCreation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/DenominationCreation.jsp" />
+	</definition>
+	<definition name="FileExport" extends="layouthome">
+		<put-attribute name="title" value="FileExport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/FileExport.jsp" />
+	</definition>
+
+	<definition name="PinGeneration" extends="layouthome">
+		<put-attribute name="title" value="PinGeneration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PinGeneration.jsp" />
+	</definition>
+
+	<definition name="pinTransactionReport" extends="layouthome">
+		<put-attribute name="title" value="pinTransactionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/pinTransactionReport.jsp" />
+	</definition>
+
+	<definition name="PinStatus" extends="layouthome">
+		<put-attribute name="title" value="PinStatus" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PinStatus.jsp" />
+	</definition>
+
+	<definition name="portalCommission" extends="layouthome">
+		<put-attribute name="title" value="portalCommission" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/portalCommission.jsp" />
+	</definition>
+
+	<definition name="commissionAssignment" extends="layouthome">
+		<put-attribute name="title" value="commissionAssignment" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/commissionAssignment.jsp" />
+	</definition>
+
+	<definition name="portalCommissionList" extends="layouthome">
+		<put-attribute name="title" value="portalCommissionList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/portalCommissionList.jsp" />
+	</definition>
+
+	<definition name="portalCommissionEdit" extends="layouthome">
+		<put-attribute name="title" value="portalCommissionEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/portalCommissionEdit.jsp" />
+	</definition>
+
+	<definition name="MerchantListing" extends="layouthome">
+		<put-attribute name="title" value="MerchantListing" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/MerchantListing.jsp" />
+	</definition>
+
+	<definition name="WalletTopup" extends="layouthome">
+		<put-attribute name="title" value="WalletTopup" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/WalletTopup.jsp" />
+	</definition>
+
+	<definition name="bankDetails" extends="layouthome">
+		<put-attribute name="title" value="bankDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/bankDetails.jsp" />
+	</definition>
+	<definition name="bankDetailsList" extends="layouthome">
+		<put-attribute name="title" value="bankDetailsList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/bankDetailsList.jsp" />
+	</definition>
+	<definition name="bankDetailsEdit" extends="layouthome">
+		<put-attribute name="title" value="bankDetailsEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/bankDetailsEdit.jsp" />
+	</definition>
+
+	<definition name="customerRegistration" extends="layouthome">
+		<put-attribute name="title" value="customerRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/customerRegistration.jsp" />
+	</definition>
+
+	<definition name="customerList" extends="layouthome">
+		<put-attribute name="title" value="customerList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/customerList.jsp" />
+	</definition>
+
+	<definition name="customerRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="customerRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/customerRegistrationEdit.jsp" />
+	</definition>
+
+	<definition name="MerchantRegistrationEdit" extends="layouthome">
+		<put-attribute name="title" value="MerchantRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/MerchantRegistrationEdit.jsp" />
+	</definition>
+
+	<definition name="transactionMISReport" extends="layouthome">
+		<put-attribute name="title" value="transactionMISReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/transactionMISReport.jsp" />
+	</definition>
+
+	<definition name="SmsUtility" extends="layouthome">
+		<put-attribute name="title" value="SmsUtility" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SmsUtility.jsp" />
+	</definition>
+
+	<definition name="ShortShipmentWithFilter" extends="layouthome">
+		<put-attribute name="title" value="ShortShipmentWithFilter" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ShortShipmentWithFilter.jsp" />
+	</definition>
+
+	<definition name="InventoryCheck" extends="layouthome">
+		<put-attribute name="title" value="InventoryCheck" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryCheck.jsp" />
+	</definition>
+
+	<definition name="InventoryCheckStatus" extends="layouthome">
+		<put-attribute name="title" value="InventoryCheckStatus" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/InventoryCheckStatus.jsp" />
+	</definition>
+
+	<definition name="centralWarehouse" extends="layouthome">
+		<put-attribute name="title" value="centralWarehouse" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/centralWarehouse.jsp" />
+	</definition>
+
+	<definition name="PoRaise" extends="layouthome">
+		<put-attribute name="title" value="PoRaise" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/PoRaise.jsp" />
+	</definition>
+
+	<definition name="BoxDetails" extends="layouthome">
+		<put-attribute name="title" value="BoxDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/BoxDetails.jsp" />
+	</definition>
+
+	<definition name="transactionServices" extends="layouthome">
+		<put-attribute name="title" value="transactionServices" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/transactionServices.jsp" />
+	</definition>
+
+	<definition name="viewOrder" extends="layouthome">
+		<put-attribute name="title" value="viewOrder" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/viewOrder.jsp" />
+	</definition>
+
+	<definition name="ShipOrder" extends="layouthome">
+		<put-attribute name="title" value="ShipOrder" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ShipOrder.jsp" />
+	</definition>
+	<definition name="ShippingHistoryView" extends="layouthome">
+		<put-attribute name="title" value="ShippingHistoryView" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ShippingHistoryView.jsp" />
+	</definition>
+
+	<definition name="OrderRecieved" extends="layouthome">
+		<put-attribute name="title" value="OrderRecieved" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OrderRecieved.jsp" />
+	</definition>
+
+	<definition name="KYCDescriptor" extends="layouthome">
+		<put-attribute name="title" value="KYCDescriptor" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/KYCDescriptor.jsp" />
+	</definition>
+
+
+	<definition name="SEIssuance" extends="layouthome">
+		<put-attribute name="title" value="SEIssuance" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SEIssuance.jsp" />
+	</definition>
+
+	<definition name="toBeShipped" extends="layouthome">
+		<put-attribute name="title" value="toBeShipped" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/toBeShipped.jsp" />
+	</definition>
+
+
+	<definition name="IDCreation" extends="layouthome">
+		<put-attribute name="title" value="IDCreation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/IDCreation.jsp" />
+	</definition>
+
+	<definition name="KYCLevel" extends="layouthome">
+		<put-attribute name="title" value="KYCLevel" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/KYCLevel.jsp" />
+	</definition>
+
+	<definition name="physicalReciept" extends="layouthome">
+		<put-attribute name="title" value="physicalReciept" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/physicalReciept.jsp" />
+	</definition>
+	<definition name="ShippingList" extends="layouthome">
+		<put-attribute name="title" value="ShippingList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ShippingList.jsp" />
+	</definition>
+
+	<definition name="KYCUpgrade" extends="layouthome">
+		<put-attribute name="title" value="KYCUpgrade" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/KYCUpgrade.jsp" />
+	</definition>
+
+	<definition name="SoldUnsoldProducts" extends="layouthome">
+		<put-attribute name="title" value="SoldUnsoldProducts" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SoldUnsoldProducts.jsp" />
+	</definition>
+	<definition name="approveMerchantList" extends="layouthome">
+		<put-attribute name="title" value="approveMerchantList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/approveMerchantList.jsp" />
+	</definition>
+		<definition name="approveMerchant" extends="layouthome">
+		<put-attribute name="title" value="approveMerchant" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/approveMerchant.jsp" />
+	</definition>
+	<definition name="ShortOverlays" extends="layouthome">
+		<put-attribute name="title" value="ShortOverlays" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ShortOverlays.jsp" />
+	</definition>
+
+	<definition name="ShortBoxes" extends="layouthome">
+		<put-attribute name="title" value="ShortOverlays" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ShortBoxes.jsp" />
+	</definition>
+	<definition name="tobeshippedplus" extends="layouthome">
+		<put-attribute name="title" value="tobeshippedplus" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/tobeshippedplus.jsp" />
+	</definition>
+
+	<definition name="KycValidation" extends="layouthome">
+		<put-attribute name="title" value="KycValidation" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/KycValidation.jsp" />
+	</definition>
+
+	<definition name="securityQuestion" extends="layouthome">
+		<put-attribute name="title" value="securityQuestion" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/securityQuestion.jsp" />
+	</definition>
+	<definition name="ChangePassword1" extends="layouthome2">
+		<put-attribute name="title" value="ChangePassword" />
+		<!-- <put-attribute name="menu" value="/views/menupage.jsp" /> -->
+		<put-attribute name="body" value="/views/ChangePassword1.jsp" />
+	</definition>
+
+	<definition name="bankList" extends="layouthome">
+		<put-attribute name="title" value="bankList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/bankList.jsp" />
+	</definition>
+
+	<definition name="bankListEdit" extends="layouthome">
+		<put-attribute name="title" value="bankListEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/bankListEdit.jsp" />
+	</definition>
+	<definition name="CustomerCareLevel" extends="layouthome">
+		<put-attribute name="title" value="CustomerCarelevel" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CustomerCareLevel.jsp" />
+	</definition>
+	<definition name="CreateUserType" extends="layouthome">
+		<put-attribute name="title" value="CreateUserType" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CreateUserType.jsp" />
+	</definition>
+	<definition name="CreateUserTypeEdit" extends="layouthome">
+		<put-attribute name="title" value="CreateUserTypeEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CreateUserTypeEdit.jsp" />
+	</definition>
+	<definition name="CreateUser" extends="layouthome">
+		<put-attribute name="title" value="CreateUser" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CreateUser.jsp" />
+	</definition>
+	<definition name="CreateSubQuery" extends="layouthome">
+		<put-attribute name="title" value="CreateSubQuery" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CreateSubQuery.jsp" />
+	</definition>
+	<definition name="Commission" extends="layouthome">
+		<put-attribute name="title" value="Commission" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Commission.jsp" />
+	</definition>
+	<definition name="editCommission" extends="layouthome">
+		<put-attribute name="title" value="editCommission" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/editCommission.jsp" />
+	</definition>
+	<definition name="editCommissionList" extends="layouthome">
+		<put-attribute name="title" value="editCommissionList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/editCommissionList.jsp" />
+	</definition>
+
+	<definition name="CommissionProductMapping" extends="layouthome">
+		<put-attribute name="title" value="CommissionProductMapping" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/CommissionProductMapping.jsp" />
+	</definition>
+
+	<definition name="CommissionProductMappingEditList" extends="layouthome">
+		<put-attribute name="title" value="CommissionProductMappingEditList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/CommissionProductMappingEditList.jsp" />
+	</definition>
+	<definition name="editCommissionMapping" extends="layouthome">
+		<put-attribute name="title" value="editCommissionMapping" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/editCommissionMapping.jsp" />
+	</definition>
+	<definition name="packingGroup" extends="layouthome">
+		<put-attribute name="title" value="packingGroup" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/packingGroup.jsp" />
+	</definition>
+	<definition name="groupList" extends="layouthome">
+		<put-attribute name="title" value="groupList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/groupList.jsp" />
+	</definition>
+	<definition name="groupEdit" extends="layouthome">
+		<put-attribute name="title" value="groupEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/groupEdit.jsp" />
+	</definition>
+	<definition name="packaging" extends="layouthome">
+		<put-attribute name="title" value="packaging" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/packaging.jsp" />
+	</definition>
+	<definition name="CardList" extends="layouthome">
+		<put-attribute name="title" value="CardList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CardList.jsp" />
+	</definition>
+	<definition name="CreateCard" extends="layouthome">
+		<put-attribute name="title" value="CreateCard" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/CreateCard.jsp" />
+	</definition>
+	<definition name="createApp" extends="layouthome">
+		<put-attribute name="title" value="createApp" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/createApp.jsp" />
+	</definition>
+	<!-- view card data -->
+	<definition name="viewCardData" extends="layouthome">
+		<put-attribute name="title" value="viewCardData" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/viewCardData.jsp" />
+	</definition>
+
+	<definition name="packagingList" extends="layouthome">
+		<put-attribute name="title" value="packagingList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/packagingList.jsp" />
+	</definition>
+	<definition name="appList" extends="layouthome">
+		<put-attribute name="title" value="appList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/appList.jsp" />
+	</definition>
+	<definition name="viewAppData" extends="layouthome">
+		<put-attribute name="title" value="viewAppData" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/viewAppData.jsp" />
+	</definition>
+	<definition name="viewPartnerList" extends="layouthome">
+		<put-attribute name="title" value="viewPartnerList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/viewPartnerList.jsp" />
+	</definition>
+	<definition name="viewWalletList" extends="layouthome">
+		<put-attribute name="title" value="viewWalletList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/viewWalletList.jsp" />
+	</definition>
+	<definition name="walletEdit" extends="layouthome">
+		<put-attribute name="title" value="walletEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/walletEdit.jsp" />
+	</definition>
+	<definition name="createPartner" extends="layouthome">
+		<put-attribute name="title" value="createPartner" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/createPartner.jsp" />
+	</definition>
+	<definition name="createWallet" extends="layouthome">
+		<put-attribute name="title" value="createWallet" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/createWallet.jsp" />
+	</definition>
+	<definition name="partnerDataEdit" extends="layouthome">
+		<put-attribute name="title" value="partnerDataEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/partnerDataEdit.jsp" />
+	</definition>
+
+	<definition name="HostList" extends="layouthome">
+		<put-attribute name="title" value="HostList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostList.jsp" />
+	</definition>
+	<definition name="AccountHeirarchyList" extends="layouthome">
+		<put-attribute name="title" value="AccountHeirarchyList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/AccountHeirarchyList.jsp" />
+	</definition>
+
+	<definition name="host" extends="layouthome">
+		<put-attribute name="title" value="host" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/host.jsp" />
+	</definition>
+
+	<definition name="VendorList" extends="layouthome">
+		<put-attribute name="title" value="VendorList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/VendorList.jsp" />
+	</definition>
+
+	<definition name="UserList" extends="layouthome">
+		<put-attribute name="title" value="UserList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/UserList.jsp" />
+	</definition>
+
+	<definition name="vendor" extends="layouthome">
+		<put-attribute name="title" value="vendor" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/vendor.jsp" />
+	</definition>
+
+	<definition name="listEdit" extends="layouthome">
+		<put-attribute name="title" value="listEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/listEdit.jsp" />
+	</definition>
+
+	<definition name="hostEdit" extends="layouthome">
+		<put-attribute name="title" value="hostEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/hostEdit.jsp" />
+	</definition>
+
+	<definition name="SEIssuenceList" extends="layouthome">
+		<put-attribute name="title" value="hostEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SEIssuenceList.jsp" />
+	</definition>
+
+	<definition name="FinancialInstrument" extends="layouthome">
+		<put-attribute name="title" value="FinancialInstrument" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/FinancialInstrument.jsp" />
+	</definition>
+
+
+	<definition name="FinancialService" extends="layouthome">
+		<put-attribute name="title" value="FinancialService" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/FinancialService.jsp" />
+	</definition>
+
+	<definition name="ProductServiceMapping" extends="layouthome">
+		<put-attribute name="title" value="hostEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/ProductServiceMapping.jsp" />
+	</definition>
+
+	<!-- Transit Part -->
+
+	<definition name="financialInsrumentsEdit" extends="layouthome">
+		<put-attribute name="title" value="hostEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/financialInsrumentsEdit.jsp" />
+	</definition>
+	<definition name="layoutpopup" template="/transits/tiles/layouts/defaultLayout.jsp">
+		<put-attribute name="title" value="" />
+		<put-attribute name="header" value="" />
+		<put-attribute name="menu" value="p" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="" />
+	</definition>
+	<definition name="transitlayouthome" template="/views/layout.jsp">
+		<put-attribute name="header" value="/views/header.jsp" />
+		<put-attribute name="menu" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/views/footer.jsp" />
+	</definition>
+
+	<definition name="FinancialServicesEdit" extends="layouthome">
+		<put-attribute name="title" value="hostEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/FinancialServicesEdit.jsp" />
+	</definition>
+
+
+	<definition name="editQueryResolutionTime" extends="layouthome">
+		<put-attribute name="title" value="editQueryResolutionTime" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/editQueryResolutionTime.jsp" />
+	</definition>
+
+	<definition name="ProductServicesMappingEdit" extends="layouthome">
+		<put-attribute name="title" value="hostEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/ProductServicesMappingEdit.jsp" />
+	</definition>
+
+
+	<definition name="layouthome1" template="/transits/tiles/layouts/defaultLayout.jsp">
+
+		<put-attribute name="header" value="" />
+		<put-attribute name="menu" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="" />
+
+
+	</definition>
+
+	<definition name="transithomepage" extends="transitlayouthome">
+		<put-attribute name="title" value="hompeage" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/views/homepage.jsp" />
+	</definition>
+
+	<!-- Add Bus Page -->
+	<definition name="addBus" extends="transitlayouthome">
+		<put-attribute name="title" value="addBus" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addBus.jsp" />
+	</definition>
+
+
+	<!-- Add Station Page -->
+	<definition name="addStation" extends="transitlayouthome">
+		<put-attribute name="title" value="addStation" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addStation.jsp" />
+	</definition>
+
+	<!-- Add Fare Page -->
+	<definition name="addFare" extends="transitlayouthome">
+		<put-attribute name="title" value="addFare" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addFare.jsp" />
+	</definition>
+	<definition name="fareTxns" extends="transitlayouthome">
+		<put-attribute name="title" value="fareTxns" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/fareTxns.jsp" />
+	</definition>
+	<definition name="vgTxns" extends="transitlayouthome">
+		<put-attribute name="title" value="vgTxns" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/vgTxns.jsp" />
+	</definition>
+	<!-- Add Route Page -->
+	<definition name="route" extends="transitlayouthome">
+		<put-attribute name="title" value="route" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/route.jsp" />
+	</definition>
+
+	<!-- Add Freight Page -->
+	<definition name="addFreight" extends="transitlayouthome">
+		<put-attribute name="title" value="addFreight" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addFreight.jsp" />
+	</definition>
+
+	<!-- Add Depot Page -->
+	<definition name="addDepot" extends="transitlayouthome">
+		<put-attribute name="title" value="addDepot" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addDepot.jsp" />
+	</definition>
+
+	<!-- Add Route Map Page -->
+	<definition name="routemap" extends="layoutpopup">
+		<put-attribute name="title" value="routemap" />
+
+		<put-attribute name="body" value="/transits/pages/routemap.jsp" />
+	</definition>
+
+	<!-- Add Stop Page -->
+	<definition name="addStop" extends="transitlayouthome">
+		<put-attribute name="title" value="addStop" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addStop.jsp" />
+	</definition>
+
+	<!-- Add Route Stop Page -->
+	<definition name="routedetail" extends="transitlayouthome">
+		<put-attribute name="title" value="routdetail" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/routedetail.jsp" />
+	</definition>
+
+	<!-- Add Bus Pass Type Page -->
+	<definition name="addPassCategory" extends="transitlayouthome">
+		<put-attribute name="title" value="addPassCategory" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/passCategory.jsp" />
+	</definition>
+	<!-- Add Penalty Category Page -->
+	<definition name="addPenalty" extends="transitlayouthome">
+		<put-attribute name="title" value="addPenalty" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addPenalty.jsp" />
+	</definition>
+
+
+
+	<definition name="commissionDetailReport" extends="layouthome">
+		<put-attribute name="title" value="Commission Detail Report" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/commissionDetailReport.jsp" />
+	</definition>
+	
+	
+	
+	
+	<definition name="commissionSummaryReport" extends="layouthome">
+		<put-attribute name="title" value="commissionSummaryReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/commissionSummaryReport.jsp" />
+	</definition>
+	
+	
+	
+	<definition name="commissionDistributionReport" extends="layouthome">
+		<put-attribute name="title" value="commissionDistributionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/commissionDistributionReport.jsp" />
+	</definition>
+	
+	<definition name="createMerchantUser" extends="layouthome">
+		<put-attribute name="title" value="createMerchantUser" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/createMerchantUser.jsp" />
+	</definition>
+	
+	
+	<definition name="editUser" extends="layouthome">
+		<put-attribute name="title" value="editUser" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/editUser.jsp" />
+	</definition>
+
+	<definition name="UserMIS" extends="layouthome">
+		<put-attribute name="title" value="Agent MIS" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/UserMIS.jsp" />
+	</definition>
+
+	<definition name="TransactionMIS" extends="layouthome">
+		<put-attribute name="title" value="Agent MIS" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/TransactionMIS.jsp" />
+	</definition>
+
+	<!-- Product vendor Management -->
+	<definition name="productVendor" extends="layouthome">
+		<put-attribute name="title" value="UnitManagement" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/productVendor.jsp" />
+	</definition>
+
+
+	<!-- COMMISSION Management -->
+	<definition name="AgentCommissionMapping" extends="layouthome">
+		<put-attribute name="title" value="AgentCommissionMapping" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/AgentCommissionMapping.jsp" />
+	</definition>
+	<definition name="HostSubVersionSchedulerList" extends="layouthome">
+		<put-attribute name="title" value="Host Sub Version Scheduler List" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/HostSubVersionSchedulerList.jsp" />
+	</definition>
+	<definition name="HostSubVersionScheduler" extends="layouthome">
+		<put-attribute name="title" value="Host Sub Version Scheduler" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/HostSubVersionScheduler.jsp" />
+	</definition>
+
+	<definition name="transactionSummaryReport" extends="layouthome">
+		<put-attribute name="title" value="Transaction Summary Report" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/transactionSummaryReport.jsp" />
+	</definition>
+	
+	<definition name="inventoryReport" extends="layouthome">
+		<put-attribute name="title" value="Inventry Summary Report" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/inventoryReport.jsp" />
+	</definition>
+
+	<definition name="Role" extends="layouthome">
+		<put-attribute name="title" value="Role" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Role.jsp" />
+	</definition>
+	<definition name="addMenu" extends="layouthome">
+		<put-attribute name="title" value="addMenu" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/addMenu.jsp" />
+	</definition>
+	<definition name="RoleList" extends="layouthome">
+		<put-attribute name="title" value="RoleList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/RoleList.jsp" />
+	</definition>
+
+	<definition name="roleEdit" extends="layouthome">
+		<put-attribute name="title" value="roleEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/roleEdit.jsp" />
+	</definition>
+
+	<definition name="menuDetails" extends="layouthome">
+		<put-attribute name="title" value="menuDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/menuDetails.jsp" />
+	</definition>
+
+	<definition name="updateAddMenuDetails" extends="layouthome">
+		<put-attribute name="title" value="updateAddMenuDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/updateAddMenuDetails.jsp" />
+	</definition>
+
+	<definition name="productVendorMappingList" extends="layouthome">
+		<put-attribute name="title" value="productVendorMappingList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/productVendorMappingList.jsp" />
+	</definition>
+
+	<definition name="productVendorEdit" extends="layouthome">
+		<put-attribute name="title" value="productVendorEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/productVendorEdit.jsp" />
+	</definition>
+
+	<definition name="Token" extends="layouthome">
+		<put-attribute name="title" value="Token" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/Token.jsp" />
+	</definition>
+	<definition name="SubscriptionTemplate" extends="layouthome">
+		<put-attribute name="title" value="SubscriptionTemplate" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/SubscriptionTemplate.jsp" />
+	</definition>
+	<definition name="SubscriptionTemplateEdit" extends="layouthome">
+		<put-attribute name="title" value="SubscriptionTemplateEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/SubscriptionTemplateEdit.jsp" />
+	</definition>
+	<definition name="walletDetails" extends="layouthome">
+		<put-attribute name="title" value="walletDetails" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/walletDetails.jsp" />
+	</definition>
+	<definition name="topUp" extends="layouthome">
+		<put-attribute name="title" value="topUp" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/topUp.jsp" />
+	</definition>
+	<definition name="walletTransactions" extends="layouthome">
+		<put-attribute name="title" value="walletTransactions" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/walletTransactions.jsp" />
+	</definition>
+	<definition name="walletBalance" extends="layouthome">
+		<put-attribute name="title" value="walletBalance" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/walletBalance.jsp" />
+	</definition>
+	<definition name="walletTransactionsReport" extends="layouthome">
+		<put-attribute name="title" value="walletTransactionsReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/walletTransactionsReport.jsp" />
+	</definition>
+	<definition name="merchantDetailTranctionReport" extends="layouthome">
+		<put-attribute name="title" value="merchantDetailTranctionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/merchant-detailed-transaction-report.jsp" />
+	</definition>
+	
+	<definition name="inventoryfileuploadProceed" extends="layouthome">
+		<put-attribute name="title" value="inventoryfileuploadProceed" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/inventoryfileuploadProceed.jsp" />
+	</definition>
+	<definition name="treeList" extends="layouthome">
+		<put-attribute name="title" value="treeList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/treeList.jsp" />
+	</definition>
+	<definition name="error" extends="layouthome">
+		<put-attribute name="title" value="error" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/error.jsp" />
+	</definition>
+	<definition name="approveKYC" extends="layouthome">
+		<put-attribute name="title" value="approveKYC" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/approveKYC.jsp" />
+	</definition>
+	<definition name="KycApprovedData" extends="layouthome">
+		<put-attribute name="title" value="KycApprovedData" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/KycApprovedData.jsp" />
+	</definition>
+	<!-- Add Conductor Management -->
+	<definition name="addConductor" extends="transitlayouthome">
+		<put-attribute name="title" value="addConductor" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addConductor.jsp" />
+	</definition>
+	<!-- MIS(Management Information Systems) -->
+
+	<definition name="mngmtInfo" extends="transitlayouthome">
+		<put-attribute name="title" value="mngmtInfo" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/mngmtInfo.jsp" />
+	</definition>
+
+	<!-- Duty Roaster -->
+
+	<definition name="addDuty" extends="transitlayouthome">
+		<put-attribute name="title" value="addDuty" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/addDuty.jsp" />
+	</definition>
+
+
+	<definition name="packagingHierarchy" extends="layouthome">
+		<put-attribute name="title" value="packagingHierarchy" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/packagingHierarchy.jsp" />
+	</definition>
+	<definition name="packing" extends="layouthome">
+		<put-attribute name="title" value="packing" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/packing.jsp" />
+	</definition>
+	<definition name="agentApiMapping" extends="layouthome">
+		<put-attribute name="title" value="agentApiMapping" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/agentApiMapping.jsp" />
+	</definition>
+	<definition name="agentApiMappingList" extends="layouthome">
+		<put-attribute name="title" value="agentApiMappingList" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/agentApiMappingList.jsp" />
+	</definition>
+	<definition name="BulkIssuance" extends="layouthome">
+		<put-attribute name="title" value="BulkIssuance" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/BulkIssuance.jsp" />
+	</definition>
+	<!-- Parking -->
+	<definition name="addParking" extends="parkinglayouthome">
+		<put-attribute name="title" value="addParking" />
+		<put-attribute name="menu" value="/parking/menupage.jsp" />
+		<put-attribute name="body" value="/parking/pages/addParking.jsp" />
+	</definition>
+
+	<definition name="addParkingFare" extends="parkinglayouthome">
+		<put-attribute name="title" value="addParkingFare" />
+		<put-attribute name="menu" value="/parking/menupage.jsp" />
+		<put-attribute name="body" value="/parking/pages/addParkingFare.jsp" />
+	</definition>
+
+	<definition name="allotCustomer" extends="parkinglayouthome">
+		<put-attribute name="title" value="allotCustomer" />
+		<put-attribute name="menu" value="/parking/menupage.jsp" />
+		<put-attribute name="body" value="/parking/pages/allotCustomer.jsp" />
+	</definition>
+
+	<definition name="parkinglayouthome" template="/views/layout.jsp">
+		<put-attribute name="header" value="/views/header.jsp" />
+		<put-attribute name="menu" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/views/footer.jsp" />
+	</definition>
+
+	<definition name="parkinghomepage" extends="parkinglayouthome">
+		<put-attribute name="title" value="hompeage" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/views/homepage.jsp" />
+	</definition>
+
+	<definition name="merchantIssuance" extends="layouthome">
+		<put-attribute name="title" value="merchantIssuance" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/merchantIssuance.jsp" />
+	</definition>
+	
+	<definition name="merchantKycInfo" extends="layouthome"> 
+		<put-attribute name="title" value="merchantKycInfo" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/merchantKycInfo.jsp" />    
+	</definition>
+		<definition name="outletRegistration" extends="layouthome"> 
+		<put-attribute name="title" value="outletRegistration" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/outletRegistration.jsp" />
+	</definition>
+	<definition name="outletRegistrationEdit" extends="layouthome"> 
+		<put-attribute name="title" value="outletRegistrationEdit" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/outletRegistrationEdit.jsp" />    
+	</definition>
+
+	<!-- ticket generation -->
+	<definition name="ticketGeneration" extends="transitlayouthome">
+		<put-attribute name="title" value="ticketGeneration" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body"
+			value="/transits/pages/ticketGeneration.jsp" />
+	</definition>
+
+	<!-- traffic tracking -->
+	<definition name="trafficTracking" extends="transitlayouthome">
+		<put-attribute name="title" value="trafficTracking" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body"
+			value="/transits/pages/trafficTracking.jsp" />
+	</definition>
+
+
+	<!-- transit client user management -->
+	<definition name="addTransitUser" extends="layouthome">
+	 <put-attribute name="title" value="addTransitUser"/>
+	  <put-attribute name="menu" value="/transits/menupage.jsp"/> 
+		<put-attribute name="body" value="/transits/pages/addTransitUser.jsp" /> 
+		</definition>
+
+	<!-- <definition name="addTransitUser" extends="layouthome">
+		<put-attribute name="body" value="/transits/pages/addTransitUser.jsp" />
+	</definition>
+ -->
+	<!-- to get user tickets list -->
+	<definition name="myTickets" extends="transitlayouthome">
+		<put-attribute name="title" value="myTickets" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body" value="/transits/pages/myTickets.jsp" />
+	</definition>
+
+	<!-- to get user tickets list -->
+	<definition name="TestTransitUser" extends="transitlayouthome">
+		<put-attribute name="title" value="TestTransitUser" />
+		<put-attribute name="menu" value="/transits/menupage.jsp" />
+		<put-attribute name="body"
+			value="/transits/pages/TestTransitUser.jsp" />
+	</definition>
+
+<!-- Metro Management -->
+<definition name="metroManagement" extends="transitlayouthome">
+		<put-attribute name="title" value="metroManagement" />
+		<put-attribute name="menu"  value="/transits/menupage.jsp"/>
+		<put-attribute name="body"  value="/transits/pages/metroManagement.jsp"/>
+	</definition>
+	
+	<!-- Create Line -->
+<definition name="addMetroLine" extends="transitlayouthome">
+		<put-attribute name="title" value="addMetroLine" />
+		<put-attribute name="menu"  value="/transits/menupage.jsp"/>
+		<put-attribute name="body"  value="/transits/pages/addMetroLine.jsp"/>
+	</definition>
+	
+	<!-- Create Metro Stops -->
+<definition name="addMetroStops" extends="transitlayouthome">
+		<put-attribute name="title" value="addMetroStops" />
+		<put-attribute name="menu"  value="/transits/menupage.jsp"/>
+		<put-attribute name="body"  value="/transits/pages/addMetroStops.jsp"/>
+	</definition>
+
+<!-- Create Metro Fares -->
+<definition name="addMetroFare" extends="transitlayouthome">
+		<put-attribute name="title" value="addMetroFare" />
+		<put-attribute name="menu"  value="/transits/menupage.jsp"/>
+		<put-attribute name="body"  value="/transits/pages/addMetroFare.jsp"/>
+	</definition>
+
+<!-- Add Stations to Metro lines -->
+	<definition name="addLineStation" extends="transitlayouthome">
+		<put-attribute name="title" value="addLineStation" />
+		<put-attribute name="menu"  value="/transits/menupage.jsp"/>
+		<put-attribute name="body"  value="/transits/pages/addLineStation.jsp"/>
+	</definition>
+	
+<!-- Station map with devices -->
+	<definition name="stationMap" extends="transitlayouthome">
+		<put-attribute name="title" value="stationMap" />
+		<put-attribute name="menu"  value="/transits/menupage.jsp"/>
+		<put-attribute name="body"  value="/transits/pages/stationMap.jsp"/>
+	</definition>
+
+   <definition name="WalletToWalletTxn" extends="layouthome">
+		<put-attribute name="title" value="Agent MIS" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/WalletToWalletTxn.jsp" />
+	</definition>
+	<definition name="merchantDetailTranctionReport" extends="layouthome">
+		<put-attribute name="title" value="merchantDetailTranctionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/merchant-detailed-transaction-report.jsp" />
+	</definition>
+	
+	<definition name="cardTranctionReport" extends="layouthome">
+		<put-attribute name="title" value="cardTranctionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/card-transaction-report.jsp" />
+	</definition>
+	<definition name="merchantTranctionReport" extends="layouthome">
+		<put-attribute name="title" value="merchantTranctionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/merchant-transaction-report.jsp" />
+	</definition>
+		<definition name="cardSubscriptionReport" extends="layouthome">
+		<put-attribute name="title" value="cardSubscriptionReport" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body"
+			value="/views/card-subscription-report.jsp" />
+	</definition>
+	<definition name="MasterSetup" extends="layouthome">
+		<put-attribute name="title" value="OTASetup" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OTASetup.jsp" />
+	</definition>
+	<definition name="OTASMSSetup" extends="layouthome">
+		<put-attribute name="title" value="OTASMSSetup" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/OTASMSSetup.jsp" />
+	</definition>
+	<definition name="OTAConfig" extends="layouthome">
+		<put-attribute name="title" value="OTAConfig" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/configota.jsp" />
+	</definition>
+	<definition name="UpdateGateway" extends="layouthome">
+		<put-attribute name="title" value="UpdateGateway" />
+		<put-attribute name="menu" value="/views/menupage.jsp" />
+		<put-attribute name="body" value="/views/updategateway.jsp" />
+	</definition>
+</tiles-definitions>

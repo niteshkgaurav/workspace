@@ -1,0 +1,1439 @@
+package com.ng.sc.service.impl;
+
+import java.io.File;
+import java.net.URLEncoder;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
+import javax.servlet.http.HttpSession;
+import javax.transaction.Transactional;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
+import com.ng.sb.common.cache.MemCacheManager;
+import com.ng.sb.common.cache.MemCacheUtils;
+import com.ng.sb.common.dataobject.AddressInfo;
+import com.ng.sb.common.dataobject.ForgetPasswordRequest;
+import com.ng.sb.common.dataobject.InventoryRequest;
+import com.ng.sb.common.dataobject.LoginData;
+import com.ng.sb.common.dataobject.PayloadData;
+import com.ng.sb.common.dataobject.PlatformLoginData;
+import com.ng.sb.common.dataobject.RequestObject;
+import com.ng.sb.common.dataobject.ResponseObject;
+import com.ng.sb.common.dataobject.SubscriberData;
+import com.ng.sb.common.dataobject.TransactionRequestData;
+import com.ng.sb.common.dataobject.TransactionResponse;
+import com.ng.sb.common.dataobject.WalletListResponseData;
+import com.ng.sb.common.dataobject.WalletRequest;
+import com.ng.sb.common.model.Address;
+import com.ng.sb.common.model.Banks;
+import com.ng.sb.common.model.CardWallets;
+import com.ng.sb.common.model.CountryCode;
+import com.ng.sb.common.model.CustomerQueryLog;
+import com.ng.sb.common.model.CustomerSubQuery;
+import com.ng.sb.common.model.Customerpriority;
+import com.ng.sb.common.model.InventoryMgmt;
+import com.ng.sb.common.model.Issuance;
+import com.ng.sb.common.model.Otp;
+import com.ng.sb.common.model.PinCodeInfo;
+import com.ng.sb.common.model.Products;
+import com.ng.sb.common.model.Subscriber;
+import com.ng.sb.common.model.UserWalletDetails;
+import com.ng.sb.common.util.CommonUtils;
+import com.ng.sb.common.util.ErrorCodes;
+import com.ng.sb.common.util.HttpUtils;
+import com.ng.sb.common.util.ISMSUtility;
+import com.ng.sb.common.util.KeyEncryptionUtils;
+import com.ng.sb.common.util.SystemConstant;
+import com.ng.sb.common.util.ThreeDESEncryption;
+import com.ng.sc.dao.IScUserMgmntDAO;
+import com.ng.sc.dao.impl.EntityUtils;
+import com.ng.sc.service.IScUserMgmntService;
+import com.ng.sc.service.ISchedulerService;
+import com.ng.sc.utils.ScSystemConstant;
+
+@Service
+public class ScUserMgmntService extends SelfCareService implements IScUserMgmntService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScUserMgmntService.class);
+	
+	@Autowired
+	private IScUserMgmntDAO iUserMgmntDAO;
+	
+	@Autowired
+	ISMSUtility smsUtility;
+	
+	@Autowired
+	ISchedulerService iSchedulerService;
+	
+	@Autowired
+	MemCacheManager cacheManager;
+	
+	@Autowired
+	PlatformLoginData selfcaredata;
+	@Autowired
+	MemCacheManager memCacheManager;
+	@Autowired
+	private EntityUtils<Banks> bankEntityUtils;
+	@Autowired
+	private EntityUtils<UserWalletDetails> userWalletDetailsEntityUtils;
+	
+	
+	
+	@Transactional
+	@Override
+	public void checkAndChangePassword(SubscriberData subscriberData, Integer subscriberId, HttpSession session) throws Exception {
+		try {
+		
+			LOGGER.info("***** Start of checkAndChangePassword() method in UserMgmntService *****");
+			
+			
+			
+			String currentEncryptedPassword = ThreeDESEncryption.getHashedString(subscriberData.getCurrentPasswd());
+			
+			
+				
+				String newEncryptedPassword = ThreeDESEncryption.getHashedString(subscriberData.getNewPasswd());
+				
+				String transactionResourceUrl  = getPlatformLoginData().getChangePasswordUrl();
+				   RestTemplate restTemplate = new RestTemplate();
+				   RequestObject  transactionRequest = new RequestObject();
+				   
+				  
+				String tokenId=(String)session.getAttribute(ScSystemConstant.TOKENID);
+				String key=(String)session.getAttribute("key");
+				
+				
+				
+				
+				
+				SubscriberData payloadData = new SubscriberData();
+				   payloadData.setUserTypeId(1);
+				   payloadData.setCurrentPasswd(currentEncryptedPassword);
+				   payloadData.setNewPasswd(newEncryptedPassword);
+				 
+				   String encryptedRequestData = KeyEncryptionUtils.encryptUsingKey(key, payloadData);
+				  
+				   transactionRequest.setChannelId(1);	
+					transactionRequest.setTokenId(tokenId);
+				   transactionRequest.setPayload(encryptedRequestData);
+				   
+				   HttpHeaders headers = new HttpHeaders();
+					headers.setContentType(MediaType.APPLICATION_JSON);
+				    HttpEntity<RequestObject> requestEntity = new HttpEntity<>(transactionRequest,headers);		 
+
+				   ResponseEntity<ResponseObject> response = restTemplate.exchange(transactionResourceUrl, HttpMethod.POST, requestEntity, ResponseObject.class);
+				   
+				  
+				   ResponseObject transactionResponse = response.getBody();
+				if(response.getStatusCode() == HttpStatus.OK){
+					subscriberData.setMessage(transactionResponse.getMessage());
+					
+					}
+				
+			
+
+		} catch (Exception ex) {
+			LOGGER.info("Exception occurred in checkAndChangePassword() method in UserMgmntService --->" + ex);
+		}
+		LOGGER.info("***** End of checkAndChangePassword() method in UserMgmntService *****--->");
+		
+	}
+
+
+	@Override
+	public Map<String, Integer> checkEmailDobAns(String emailorusername, String date, String answer) throws Exception {
+		Map<String, Integer> accountIdOrInvalidCount = null;
+		try {
+			accountIdOrInvalidCount = iUserMgmntDAO.validateSecurityQuestionCheck(emailorusername,
+					convertStringToSqlDate(date), answer);
+		} catch (Exception ex) {
+			LOGGER.info("Exception occurred in checkEmailDobAns() method in UserMgmntService--->" + ex);
+		}
+		return accountIdOrInvalidCount;
+	}
+
+	@Override
+	public Date convertStringToSqlDate(String dob) throws Exception {
+		java.sql.Date sqlDate = null;
+		try {
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			java.util.Date utilDate = df.parse(dob);
+			sqlDate = new java.sql.Date(utilDate.getTime());
+
+		} catch (Exception e) {
+			LOGGER.info("Exception occurred in convertStringToSqlDate() method in UserMgmntService--->" + e);
+		}
+		return sqlDate;
+
+	}
+
+
+	@Transactional
+	@Override
+	public SubscriberData setForgetedPassword(SubscriberData subscriberData) throws Exception {
+		LOGGER.debug("ForgetPasswordView ");
+		
+		
+		
+		try {
+			
+			
+			String resourceUrl  = getPlatformLoginData().getForgetedPasswordUrl();
+			 RestTemplate restTemplate = new RestTemplate();
+			   ForgetPasswordRequest requestObject = new ForgetPasswordRequest();
+			   String newpassword = ThreeDESEncryption.getHashedString(subscriberData.getNewPassword());
+				
+			
+				
+				requestObject.setChannelId(1);
+				requestObject.setStepNo(2);
+				requestObject.setUserTypeId(1);
+				requestObject.setUserId(subscriberData.getMobile());
+				requestObject.setOtpValue(subscriberData.getOtpOnForgotPass());
+				requestObject.setNewPassword(newpassword);
+				
+				ResponseEntity<ResponseObject> response = restTemplate.postForEntity(resourceUrl, requestObject, ResponseObject.class);
+				
+				
+				   
+//				subscriberData.setCode(response.getBody().getStatus());
+				if(response.getStatusCode() == HttpStatus.OK)
+					{	
+					if(response.getBody().getStatus().intValue() == ErrorCodes.REQUEST_SUCCESSFUL.getCode().intValue())
+						  subscriberData.setMessage("Password Changed Successfully."); 
+					 else
+					   subscriberData.setMessage(response.getBody().getMessage()); 
+				}
+				else{
+					  subscriberData.setMessage("Server Error");
+				}
+			
+		} catch (Exception ex) {
+			LOGGER.info("Exception occurred in setForgetedPassword() method in UserMgmntService --->" + ex);
+		}
+		return subscriberData;
+	}
+	
+
+	@Override
+	public Map getCountryCodeMap() {
+
+		Map<Integer, String> countryCodeMap = new HashMap<>();
+		List<CountryCode> codeList = iUserMgmntDAO.getCountryCodeMap();
+		for (CountryCode codList : codeList) {
+			countryCodeMap.put(codList.getId(), codList.getCode());
+		}
+		LOGGER.info("******Successfully executed getCountryCodeMap() in Service ");
+		return countryCodeMap;
+	}
+
+	@Transactional
+	@Override
+	public SubscriberData submitSubscriberPersonalInfo(SubscriberData subscriberData, Integer subscriberId)
+			throws Exception {
+		LOGGER.info("******Start Method submitSubscriberPersonalInfo() in ScUserMgmntService "+subscriberData.getDob());
+	
+		
+		java.util.Date utilDate;
+		java.sql.Date sqlDob = null;
+		
+		
+		/*if(subscriberData.getDob() !=null || !"".equals(subscriberData.getDob())){
+	
+			 utilDate = new SimpleDateFormat("dd-MM-yyyy").parse(subscriberData.getDob());
+				sqlDob = new java.sql.Date(utilDate.getTime());
+	
+		}*/
+		Subscriber subscriber = iUserMgmntDAO.getSubscriberById(subscriberId);
+		subscriber.setName(subscriberData.getName());
+		if(!StringUtils.isEmpty(subscriberData.getLastName())){
+		subscriber.setSurname(subscriberData.getLastName());
+		}else{
+			subscriber.setSurname("");
+		}
+		/*if(sqlDob!=null){
+		subscriber.setDateOfBirth(sqlDob);
+		}*/
+		subscriber.setEmailId(subscriberData.getEmailId());
+		subscriber = iUserMgmntDAO.saveSubscriberDetails(subscriber);
+
+		SubscriberData subscriberData1=getProfilesById(subscriberId);
+		
+		if (subscriber.getId() != null) {
+			subscriberData1.setMsg(SystemConstant.USER_MODIFY_SUCCESS);
+			subscriberData1.setErrorMsg("");
+			subscriberData1.setMobile(subscriber.getMsisdn());
+		} else {
+			subscriberData1.setErrorMsg(SystemConstant.NETWORK_ERROR_MSG);
+			subscriberData1.setMsg("");
+		}
+		return subscriberData1;
+	}
+
+	@Transactional
+	@Override
+	public SubscriberData submitUserProfileAddress(SubscriberData subscriberData, Integer userLoginId) throws Exception {
+
+		LOGGER.info("******Start Method submitSubscriberPersonalInfo() in ScUserMgmntService ");
+		Subscriber subscriber = iUserMgmntDAO.getSubscriberById(userLoginId);
+		String deploymentFor = getPlatformLoginData().getDeploymentFor();
+			subscriber.setAddress(subscriberData.getAddress());
+			subscriber.setAddress1(subscriberData.getAddress1());
+			subscriber.setPinCode(subscriberData.getPinCode());
+			subscriber.setCity(subscriberData.getCity());
+			subscriber.setState(subscriberData.getState());
+			subscriber.setCountry(subscriberData.getCountry());
+			subscriber.setRegion(subscriberData.getRegion());
+			subscriber.setLocality(subscriberData.getLocality());
+	/*//	} /*else {
+
+			subscriber.setAddressId(new Address(subscriberData.getPinaddressId()));
+		}*/
+		subscriber = iUserMgmntDAO.saveSubscriberDetails(subscriber);
+		SubscriberData subscriberData1=getProfilesById(userLoginId);
+		
+		if (subscriber.getId() != null) {
+			subscriberData1.setDeploymentType(deploymentFor);
+			subscriberData1.setMsg(SystemConstant.USER_MODIFY_SUCCESS);
+			subscriberData1.setErrorMsg("");
+		} else {
+			subscriberData1.setErrorMsg(SystemConstant.NETWORK_ERROR_MSG);
+			subscriberData1.setMsg("");
+		}
+		return subscriberData1;
+
+	}
+
+	private Integer generateOTP() {
+		Random ran = new Random();
+		return 100000 + ran.nextInt(899999);
+	}
+
+	@Override
+	@Transactional
+	public SubscriberData getOtpOnForgotPass(String mobileNo,String dateOfBirth) throws Exception {
+		
+		LOGGER.debug("ForgetPasswordOTPView ");
+
+
+		
+	
+		SubscriberData subscriberData=new SubscriberData();
+		try {
+			 String resourceUrl  = getPlatformLoginData().getForgetedPasswordUrl();
+			 RestTemplate restTemplate = new RestTemplate();
+			   ForgetPasswordRequest requestObject = new ForgetPasswordRequest();
+		  
+				SubscriberData payloadData = new SubscriberData();
+				  payloadData.setMobile(mobileNo);
+				 payloadData.setDateOfBirth((dateOfBirth).toString());
+				// payloadData.setDateOfBirth(CommonUtils.getDateFromString(dateOfBirth, "yyyy-MM-dd"));
+				  //payloadData.setDateOfBirth(CommonUtils.getDateFromString(dateOfBirth, "yyyy-MM-dd").toString());
+				requestObject.setChannelId(1);
+				requestObject.setUserTypeId(1);
+				requestObject.setStepNo(1);
+				//requestObject.setDateOfBirth(payloadData.getDateOfBirth().toString());
+				//requestObject.setDateOfBirth(CommonUtils.getStringFromDate(payloadData.getDateOfBirth(), "yyyy-MM-dd"));
+				//requestObject.setDateOfBirth(CommonUtils.getDateFromString(payloadData.getDateOfBirth(), "yyyy-MM-dd").toString());
+				//SimpleDateFormat sdf=new SimpleDateFormat();
+				//java.util.Date date1=new SimpleDateFormat("dd-MM-yyyy").parse(dateOfBirth);  
+				//SimpleDateFormat sdf1=new  SimpleDateFormat("yyyy-MM-dd");
+				//requestObject.setDateOfBirth(sdf1.format(date1));
+				//String dateF=CommonUtils.getStringFromDate(CommonUtils.getDateFromString(dateOfBirth, "yyyy-MM-dd"), "yyyy-MM-dd");
+				//requestObject.setDateOfBirth(dateF);
+				requestObject.setDateOfBirth(payloadData.getDateOfBirth());
+				requestObject.setUserId(payloadData.getMobile());
+				
+				ResponseEntity<ResponseObject> response = restTemplate.postForEntity(resourceUrl, requestObject, ResponseObject.class);
+				ResponseObject subscriberResponse = response.getBody();
+				
+				   
+					
+			
+				if(response.getStatusCode() == HttpStatus.OK)
+					{	
+					
+					   subscriberData.setMessage(subscriberResponse.getMessage()); 
+					   subscriberData.setRequestStatus(subscriberResponse.getStatus());
+				
+				}
+		
+		
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in getOtpOnForgotPass() method of ScUserMgmntService " + ex);
+		}
+		return subscriberData;
+	}
+
+	@Override
+	@Transactional
+	public void validateOtp(String mobileNo,String dateOfBirth, Integer otp) throws Exception {
+		try{
+			iUserMgmntDAO.validateOtp(mobileNo,dateOfBirth,otp);
+		}
+		catch (Exception ex) {
+			LOGGER.debug("Exception caught in validateOtp() method of ScUserMgmntService " + ex);
+		}
+	}
+	
+	@Transactional
+	public void setOtp(Subscriber subscriber, String mobileNo) {
+		Integer otp = generateOTP();
+		try {
+			Otp otp2 = new Otp();
+			otp2.setOtp(otp);
+			otp2.setStatus(SystemConstant.ACTIVE);
+			otp2.setSubscriberId(subscriber);
+			otp2.setCurrentTime(new java.util.Date());
+			 iUserMgmntDAO.addOtp(otp2);
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in setOtp() method of ScUserMgmntService " + ex);
+		}
+	}
+
+	@Override
+	@Transactional
+	public void updateTimeoutOtp(Otp otp, String status) throws Exception {
+		try {
+			LOGGER.debug("Execution start of updateTimeoutOtp() method of ScUserMgmntService");
+			Otp otpnew = iUserMgmntDAO.getOtp(otp);
+			otpnew.setStatus(status);
+			iUserMgmntDAO.addOtp(otpnew);
+		} catch (Exception ex) {
+			LOGGER.debug("Exception occurred in updateTimeoutOtp() method of ScUserMgmntService " + ex);
+		}
+		LOGGER.debug("Execution end of updateTimeoutOtp() method of ScUserMgmntService");
+	}
+
+	@Override
+	public List<AddressInfo> fetchAddress(String pinCode) throws Exception {
+		List<Address> addresses = null;
+		List<AddressInfo> addressInfos = new ArrayList<>();
+		try {
+			addresses = iUserMgmntDAO.fetchAddress(pinCode);
+			if (addresses != null && !addresses.isEmpty()) {
+				for (Address address : addresses) {
+					AddressInfo addressInfo = new AddressInfo();
+					BeanUtils.copyProperties(addressInfo, address);
+					addressInfos.add(addressInfo);
+				}
+			}
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in fetchAddress() method of ScUserMgmntService " + ex);
+		}
+		return addressInfos;
+	}
+
+	@Override
+	@Transactional
+	public SubscriberData getProfilesById(Integer subscriberId) throws Exception {
+		LOGGER.info("******Start Method getProfileById() in ScUserMgmntService ");
+		SubscriberData subscriberData = new SubscriberData();
+		DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+		Subscriber subscriber = iUserMgmntDAO.getSubscriberById(subscriberId);
+		 	
+		if (subscriber.getId() != null) {
+			
+			subscriberData.setSubscriberid(subscriber.getId());
+			subscriberData.setName(subscriber.getName());
+			if(!StringUtils.isEmpty(subscriber.getSurname())){
+			subscriberData.setLastName(subscriber.getSurname());
+			}else{
+				subscriberData.setLastName(subscriber.getSurname());
+			}
+			if(subscriber.getDateOfBirth()!=null){
+			subscriberData.setDob(formatter.format(subscriber.getDateOfBirth()));
+			}
+			subscriberData.setEmailId(subscriber.getEmailId());
+			subscriberData.setAddress(subscriber.getAddress());
+			subscriberData.setAddress1(subscriber.getAddress1());
+			subscriberData.setMobile(subscriber.getMsisdn());
+			subscriberData.setMobilenumber(subscriber.getMsisdn());
+			
+			if(subscriber.getProfileImage() != null && !subscriber.getProfileImage().isEmpty())
+				subscriberData.setProfileImage(selfcaredata.getDownloadKycUrl() + File.separator +  subscriber.getProfileImage());
+			
+			
+		//	if (getPlatformLoginData().getDeploymentFor().equals(SystemConstant.TAFANI)) {
+			//	subscriberData.setDeploymentType(SystemConstant.TAFANI);
+				subscriberData.setPinCode(subscriber.getPinCode());
+				subscriberData.setLocality(subscriber.getLocality());
+				subscriberData.setRegion(subscriber.getRegion());
+				subscriberData.setCity(subscriber.getCity());
+				subscriberData.setState(subscriber.getState());
+				subscriberData.setCountry(subscriber.getCountry());
+//			} else {
+//                            if(subscriber.getPinCode()!=null){
+//				subscriberData.setPinCode(Integer.parseInt(subscriber.getAddressId().getPincode()));
+//				subscriberData.setLocality(subscriber.getAddressId().getLocation());
+//				subscriberData.setRegion(subscriber.getAddressId().getRegion());
+//				subscriberData.setCity(subscriber.getAddressId().getRegion());
+//				subscriberData.setState(subscriber.getAddressId().getState());
+//				subscriberData.setCountry(subscriber.getAddressId().getCountry());
+//                            }
+//			}
+		}
+		return subscriberData;
+	}
+
+
+	@Override
+	public SubscriberData getwalletdetails(SubscriberData subscriberData) throws Exception {
+		
+		
+		UserWalletDetails userwallet;
+		 userwallet=  iUserMgmntDAO.getwallet(subscriberData.getSubscriberid()); 
+		
+		 
+		 if(userwallet!=null)
+		 {
+
+		userwallet.getWalletType().getWalletTypeName();
+	 
+			 subscriberData.setWallet("Wallet");
+			 
+			 
+		 }
+		
+		
+		return subscriberData;
+	}
+
+
+	@Override
+	public SubscriberData getproducttype(SubscriberData subscriberData) throws Exception {
+		LOGGER.info("***Start  method getproducttype() in CustomerCareService ");
+
+
+		List<Products> list=  iUserMgmntDAO.getproducttype();
+
+		Map<String,String> productTypeMap= new HashMap<>();
+
+
+		try {
+			for(Products products:list)
+			{
+				productTypeMap.put(products.getType(),products.getType());
+			}
+		} catch (Exception e) {
+			LOGGER.info("****Exception  method getproducttype() in CustomerCareService"+e);
+
+		}
+		subscriberData.setProductTypeMap(productTypeMap);
+		LOGGER.info("***Start  method getproducttype() in CustomerCareService");
+
+		return subscriberData;
+	}
+	@Override
+	@Transactional
+	public Map<Integer,String> getsubquerylist(String productType) throws Exception {
+
+		LOGGER.info("****Start  method getsubquerylist() in CustomerCareService");
+		List<CustomerSubQuery> subquerylist= iUserMgmntDAO.getsubquerylist(productType);
+		Map<Integer,String> map= new HashMap<>();
+
+		try {
+			
+			for(CustomerSubQuery customerSubQuery:subquerylist)
+			{
+				map.put(customerSubQuery.getId(), customerSubQuery.getSubquery());
+			}
+			
+		} catch (Exception e) {
+			LOGGER.info("****Exception  method getsubquerylist() in CustomerCareService" +e);
+
+		}
+		LOGGER.info("****Start  method getproducttype() in CustomerCareService");
+		return map;
+	}
+
+
+	@Override
+	public TransactionRequestData transactionView(TransactionRequestData transactionRequestData, HttpSession session) throws Exception {
+		LOGGER.debug("transactionView ");
+		
+		try
+		{
+			
+		   String transactionResourceUrl  = getPlatformLoginData().getTransactionUrl();
+		   RestTemplate restTemplate = new RestTemplate();
+		   RequestObject  transactionRequest = new RequestObject();
+		   
+		String tokenId=(String)session.getAttribute(ScSystemConstant.TOKENID);
+		String key=(String)session.getAttribute("key");
+		
+		   
+		   TransactionRequestData payloadData = new TransactionRequestData();
+		   payloadData.setEndDate(transactionRequestData.getEndDate());
+		   payloadData.setStartDate(transactionRequestData.getStartDate());
+		   payloadData.setTxnType(transactionRequestData.getTxnType());
+		   payloadData.setTxnStatus(transactionRequestData.getTxnStatus());
+		   payloadData.setTxnCount(transactionRequestData.getTxnCount());
+		   
+		   String encryptedRequestData = KeyEncryptionUtils.encryptUsingKey(key, payloadData);
+		  
+		   transactionRequest.setChannelId(1);	
+			transactionRequest.setTokenId(tokenId);
+		   transactionRequest.setPayload(encryptedRequestData);
+		   
+		   ResponseEntity<ResponseObject> response = restTemplate.postForEntity(transactionResourceUrl, transactionRequest, ResponseObject.class);
+		   ResponseObject transactionResponse = response.getBody();
+		   
+		   
+		
+		   TransactionResponse[] txnResponse =  KeyEncryptionUtils.jsonStringToObjectArray(KeyEncryptionUtils.decryptUsingKey(key, transactionResponse.getPayload()), TransactionResponse[].class);
+		   
+			
+		if(response.getStatusCode() == HttpStatus.OK)
+		{	
+			if(txnResponse.length==0){
+				transactionRequestData.setMessage("No Data to Display");	
+			}
+			transactionRequestData.setTxnResponse(txnResponse);
+		}
+		transactionRequestData.setCurrencyCode(getPlatformLoginData().getCurrencyCode());
+		
+		}
+		catch(Exception exception){
+			LOGGER.debug("Exception in catch of try block::"+exception);
+		}
+		return transactionRequestData;
+		
+		
+
+	}
+	
+
+	@Override
+	public Map<Integer, String> getWalletList(String loginId) throws Exception {
+		Map<Integer, String> walletMap = new HashMap<>();
+		List<Integer> productTypeId = iUserMgmntDAO.getProductTypeId(loginId);
+		List<CardWallets> walletList = iUserMgmntDAO.getWalletList(productTypeId);
+		for (CardWallets walletListinfo : walletList) {
+			walletMap.put(walletListinfo.getWalletId().getId(), walletListinfo.getWalletId().getWalletTypeName());
+		}
+		return walletMap;
+	}
+
+
+	@Override
+	public WalletRequest walletToWalletView(WalletRequest walletRequestData, HttpSession session,Integer ConfirmOtp) throws Exception {
+LOGGER.debug("walletToWalletView ");
+ResponseObject transactionResponse =null;
+		try
+		{
+		   String transactionResourceUrl  = getPlatformLoginData().getWalletToWalletUrl();
+		   RestTemplate restTemplate = new RestTemplate();
+		   RequestObject  wtwRequest = new RequestObject();
+		   
+		  
+		String tokenId=(String)session.getAttribute(ScSystemConstant.TOKENID);
+		String key=(String)session.getAttribute("key");
+		
+		LoginData loginData = (LoginData) session.getAttribute(ScSystemConstant.LOGINDATA);
+		
+		
+		   
+		   WalletRequest payloadData = new WalletRequest();
+		   payloadData.setWalletId(walletRequestData.getWalletId());
+		   payloadData.setUserMobile(walletRequestData.getUserMobile());
+		   payloadData.setAmount(walletRequestData.getAmount());
+		//   payloadData.setOtp(ConfirmOtp);
+		   
+		   String encryptedRequestData = KeyEncryptionUtils.encryptUsingKey(key, payloadData);
+		  
+		   wtwRequest.setChannelId(1);	
+		   wtwRequest.setTokenId(tokenId);
+		   wtwRequest.setPayload(encryptedRequestData);
+		   
+		   ResponseEntity<ResponseObject> response = restTemplate.postForEntity(transactionResourceUrl, wtwRequest, ResponseObject.class);
+		   transactionResponse = response.getBody();
+		   
+		
+		
+		   PayloadData  walletRequest =  KeyEncryptionUtils.jsonStringToObject(KeyEncryptionUtils.decryptUsingKey(key, transactionResponse.getPayload()), PayloadData.class);
+			
+		if(response.getStatusCode() == HttpStatus.OK && walletRequest!=null)
+		{
+			if(transactionResponse.getStatus().intValue() == ErrorCodes.REQUEST_SUCCESSFUL.getCode().intValue())
+			{
+				//Send Message to Sender
+				String senderTemplate = getPlatformLoginData().getWtwSenderTemplate();
+				
+				senderTemplate = KeyEncryptionUtils.replaceArgumentParameters(senderTemplate, new String[]{ walletRequestData.getAmount()+".00", walletRequestData.getUserMobile() });
+				
+				String unicodePushUrl = getPlatformLoginData().getTafaniUnicodePushUrl();
+				
+				unicodePushUrl = KeyEncryptionUtils.replaceArgumentParameters(unicodePushUrl, new String[]{ loginData.getSubscriberMobNo() , URLEncoder.encode(senderTemplate, System.getProperty("file.encoding")) });
+				
+				String pushResponse = HttpUtils.makeGetRequestToURL(unicodePushUrl, 60000);
+				
+				System.out.println("Sender Alert Push : "+pushResponse+" URL :"+unicodePushUrl);
+				
+				//Send Message to Receiver
+				String receiverTemplate = getPlatformLoginData().getWtwReceiverTemplate();
+				
+				receiverTemplate = KeyEncryptionUtils.replaceArgumentParameters(receiverTemplate, new String[]{ walletRequestData.getAmount()+".00", loginData.getSubscriberMobNo()});
+				
+				String unicodePushUrlReceiver = getPlatformLoginData().getTafaniUnicodePushUrl();
+				
+				unicodePushUrlReceiver = KeyEncryptionUtils.replaceArgumentParameters(unicodePushUrlReceiver, new String[]{ walletRequestData.getUserMobile() , URLEncoder.encode(receiverTemplate, System.getProperty("file.encoding")) });
+				
+				String pushResponseReceiver = HttpUtils.makeGetRequestToURL(unicodePushUrlReceiver, 60000);
+				
+				System.out.println("Receiver Alert Push : "+pushResponseReceiver+" URL :"+unicodePushUrlReceiver);
+				
+			}
+			walletRequestData.setMessage(transactionResponse.getMessage());
+			String a=walletRequest.getCreationDate();
+			a=a.substring(0,2)+"-"+a.substring(2,4)+"-"+a.substring(4);
+				walletRequestData.setCreationDate(a);
+				
+				String b=walletRequest.getCreationTime();
+				b=b.substring(0,2)+":"+b.substring(2,4)+":"+b.substring(4);
+				walletRequestData.setCreationTime(b);
+				walletRequestData.setWalletId(Integer.parseInt(walletRequest.getWalletId()));
+				walletRequestData.setWalletbalance(String.valueOf(walletRequest.getWalletBalance()));
+		}
+		
+		if(response.getStatusCode() == HttpStatus.OK && walletRequest==null){
+			walletRequestData.setMessage(transactionResponse.getMessage());
+		}
+		}
+		catch(Exception exception){
+			LOGGER.debug("Exception in catch of try block::"+exception);
+			walletRequestData.setMessage("There is some error during fund transfer. Please try after some time.");
+		}
+		return walletRequestData;
+	}
+
+
+	@Override
+	@Transactional
+	public Integer saveMyQuery(SubscriberData subscriberData,String mobileNo) throws Exception {
+		CustomerQueryLog customerQueryLog=new CustomerQueryLog();
+		try{
+			Subscriber subscriber=iUserMgmntDAO.validateMobile(mobileNo);
+			String productDetails=subscriberData.getQuerytype();
+			String[] productDetail= productDetails.split("#");
+			customerQueryLog.setProductid(new Products(Integer.parseInt(productDetail[0])));
+			customerQueryLog.setSubqueryId(new CustomerSubQuery(subscriberData.getSubqueryid()));
+			customerQueryLog.setFinaldescription(subscriberData.getSubquerydescription());
+			customerQueryLog.setInitialcustomerquery(subscriberData.getSubquerycomment());
+		customerQueryLog.setMobilenoservice(mobileNo);
+		customerQueryLog.setSubscriberId(subscriber);
+		customerQueryLog.setIsSelfcare(SystemConstant.SELFCARE);
+		customerQueryLog.setCreatedon(new java.util.Date());
+		customerQueryLog.setPriorityid(new Customerpriority(1));
+		customerQueryLog.setStatus("Pending");
+		customerQueryLog=iUserMgmntDAO.saveMyQuery(customerQueryLog);
+		}
+		catch(Exception e){
+			LOGGER.info(""+e);
+		}
+		return customerQueryLog.getId();
+
+		
+		
+		
+	}
+	
+	@Override
+	public int checkfiled(String value, String tablename, String field) throws Exception {
+		
+			
+			int count=0;
+			try
+			{
+				LOGGER.info("Execution start of checkDuplicateName() method in BankService");
+			      count = iUserMgmntDAO.checkfiled(value,tablename,field);
+			}catch(Exception ex)
+			{
+				LOGGER.debug("Exception occurred in checkDuplicateName() method in BankService "+ex);
+			}
+			LOGGER.info("Execution end of checkDuplicateName() method in BankService");
+			return count;
+			
+			
+	}
+	
+	@Override
+	public int subscriberExists(String mobile, String dob, String emailId,String userPassword) throws Exception {
+		
+			
+			int count=0;
+			try
+			{
+				LOGGER.info("Execution start of checkDuplicateName() method in BankService");
+			      count = iUserMgmntDAO.getSubscriberExist(mobile,dob,emailId,userPassword);
+			}catch(Exception ex)
+			{
+				LOGGER.debug("Exception occurred in checkDuplicateName() method in BankService "+ex);
+			}
+			LOGGER.info("Execution end of checkDuplicateName() method in BankService");
+			return count;
+			
+			
+	}
+	
+	
+	
+	 @Override
+	 public SubscriberData getWalletDetailList(LoginData loginData, HttpSession session) throws Exception{
+		 SubscriberData subscriberData=new SubscriberData();
+	  try{
+	    String resourceUrl = getPlatformLoginData().getWalletListURL();
+	      RestTemplate restTemplate = new RestTemplate();
+	      RequestObject requestObject = new RequestObject();
+	    String key=(String)session.getAttribute("key");
+	    String tokenId=(String)session.getAttribute("tokenId");
+	    
+	    WalletRequest payloadData = new WalletRequest();
+	    
+	      payloadData.setUserMobile(loginData.getSubscriberMobNo());
+	      
+	    
+	     
+	   
+	   String encryptedRequestData = KeyEncryptionUtils.encryptUsingKey(key,payloadData);
+	   
+	   requestObject.setChannelId(1);
+	  
+	   requestObject.setTokenId(tokenId);
+	    requestObject.setPayload(encryptedRequestData);
+	    
+	    
+	    ResponseEntity<ResponseObject> response = restTemplate.postForEntity(resourceUrl, requestObject, ResponseObject.class);
+	   
+	      ResponseObject transactionResponse = response.getBody();
+	      
+	     WalletListResponseData[] responsedata =  KeyEncryptionUtils.jsonStringToObjectArray(KeyEncryptionUtils.decryptUsingKey(key, transactionResponse.getPayload()), WalletListResponseData[].class);
+	     
+	      
+	    if(response.getStatusCode() == HttpStatus.OK)
+	    { 
+	    	subscriberData.setMessage(transactionResponse.getMessage());
+	    	subscriberData.setTxnResponse(responsedata);
+	    }
+	    }catch(Exception e){
+	     LOGGER.info("",e);
+	    }
+	      return subscriberData;   
+	    
+	  }
+
+
+	@Override
+	public List<SubscriberData> queryStatus( HttpSession session, String mobileNo,TransactionRequestData transactionRequestData) {
+		List<SubscriberData> querydetails=new ArrayList<>();
+		try{
+			LOGGER.info("queryStatus method start");
+			List<CustomerQueryLog>	customerqueryloglist=iUserMgmntDAO.getqueryLog(mobileNo,transactionRequestData);
+			if(customerqueryloglist!=null){
+			for(CustomerQueryLog customerquerylogdetail:customerqueryloglist){
+				SubscriberData queryData=new SubscriberData();
+				queryData.setId(customerquerylogdetail.getId());
+				queryData.setSubquerydescription(customerquerylogdetail.getSubqueryId().getSubquery());
+				queryData.setCreatedDate(KeyEncryptionUtils.dateToString(customerquerylogdetail.getCreatedon(), SystemConstant.TRANSACTION_DATE_TIME_FORMAT).toString());
+				queryData.setQueryStatus(customerquerylogdetail.getStatus());
+				querydetails.add(queryData);
+			}
+			}else{
+				transactionRequestData.setMessage("No Data to display");
+			}
+		}catch(Exception e){
+			LOGGER.info("Exception in queryStatus method"+e);
+		}
+		return querydetails;
+	}
+
+
+	@Override
+	@Transactional
+	public Integer saveTransactionIssue(String instrument, String id, String remarks, LoginData loginData, String subQueryId) {
+		CustomerQueryLog customerQueryLog=new CustomerQueryLog();
+		try{
+			
+			
+			customerQueryLog.setProductid(new Products(iUserMgmntDAO.getProductId(instrument).getId()));
+			customerQueryLog.setSubqueryId(new CustomerSubQuery(Integer.parseInt(subQueryId)));// 
+			customerQueryLog.setFinaldescription(remarks);
+		customerQueryLog.setMobilenoservice(loginData.getUsername());
+		Subscriber subscriber = iUserMgmntDAO.validateMobile(loginData.getUsername());
+		customerQueryLog.setSubscriberId(subscriber);
+		customerQueryLog.setIsSelfcare(SystemConstant.SELFCARE);
+		customerQueryLog.setPriorityid(new Customerpriority(3));
+		customerQueryLog.setCreatedon(new java.util.Date());
+		customerQueryLog.setStatus("Pending");
+		customerQueryLog=iUserMgmntDAO.saveMyQuery(customerQueryLog);
+		}
+		catch(Exception e){
+			LOGGER.info(""+e);
+		}
+
+		return customerQueryLog.getId();
+		
+	}
+
+
+	/*@Override
+	public List<String> getfindUrlList(Integer subqueryid) {
+		LOGGER.info("****Start  method getsubquerylist() in CustomerCareService");
+		
+		List<String> list= new ArrayList();
+
+		try {
+			CustomerSubQuery subquerylist= iUserMgmntDAO.getListOfLinks(subqueryid);
+			String links=subquerylist.getFilePath();
+			String[] linkslist=links.split(",");
+			for(int i=0;i<linkslist.length;i++){
+				list.add(i+"#"+linkslist[i]);
+			}
+			
+			
+		} catch (Exception e) {
+			LOGGER.info("****Exception  method getsubquerylist() in CustomerCareService" +e);
+
+		}
+		LOGGER.info("****Start  method getproducttype() in CustomerCareService");
+		return list;
+	}
+*/
+	
+	@Override
+	public String getfindUrlList(Integer subqueryid) {
+		LOGGER.info("****Start  method getsubquerylist() in CustomerCareService");
+		
+		String links=null;
+		String filename="";
+		try {
+			CustomerSubQuery subquerylist= iUserMgmntDAO.getListOfLinks(subqueryid);
+			links=subquerylist.getFilePath();
+			
+			String names[]=links.split(",");
+			for(String name:names)
+			{
+				String splitName[]=name.split("/");
+				filename=filename+splitName[1]+",";
+			}
+			
+		} catch (Exception e) {
+			LOGGER.info("****Exception  method getfindUrlList() in CustomerCareService" +e);
+
+		}
+		return links+"#"+filename;
+	}
+	@Override
+	public SubscriberData getAllDetails(SubscriberData subscriberData) {
+
+		List<SubscriberData> customerData = new ArrayList<>();
+		try {
+			List<InventoryMgmt> list = iUserMgmntDAO.getProductDetail(subscriberData.getMobile());
+			List<UserWalletDetails> walletList = iUserMgmntDAO.getAllwalletList(subscriberData.getSubscriberid());
+			Set<Integer> checkDuplicate = new HashSet();
+			if (!list.isEmpty() && list != null)
+				for (InventoryMgmt inventoryMgmt : list) {
+					if (checkDuplicate.add(inventoryMgmt.getProductId().getId())) {
+						if (inventoryMgmt.getProductId().getProductName().equals("PayCard")) {
+							for (UserWalletDetails walletDetail : walletList) {
+								SubscriberData data1 = new SubscriberData();
+								data1.setProductName("PayCard");
+								data1.setWallet(walletDetail.getWalletType().getWalletTypeName());
+								data1.setWalletBalance(Double.parseDouble(walletDetail.getCurrentBalance()));
+								data1.setStartDate(KeyEncryptionUtils.dateToString(walletDetail.getCreateDate(), SystemConstant.TRANSACTION_DATE_TIME_FORMAT));
+								data1.setStatus(inventoryMgmt.getProductStatus());
+								if (null == subscriberData.getWalletList()) {
+									customerData.add(data1);
+									subscriberData.setWalletList(customerData);
+								} else {
+									subscriberData.getWalletList().add(data1);
+								}
+							}
+
+						} else {
+							Issuance issuance=iUserMgmntDAO.getIssuanceDetail(subscriberData.getMobile());
+							SubscriberData data1 = new SubscriberData();
+							data1.setProductName(inventoryMgmt.getProductId().getProductName());
+							data1.setWallet("Not Applicable");
+							//data1.setStartDate((inventoryMgmt.getEditDate()!=null)?KeyEncryptionUtils.dateToString(inventoryMgmt.getEditDate(), SystemConstant.TRANSACTION_DATE_TIME_FORMAT):null);
+							//data1.setStartDate((inventoryMgmt.getEditDate().toString()));
+							data1.setStartDate(issuance.getCreatedAt().toString());
+							data1.setStatus(inventoryMgmt.getProductStatus());
+							if (null == subscriberData.getWalletList()) {
+								customerData.add(data1);
+								subscriberData.setWalletList(customerData);
+							} else {
+								subscriberData.getWalletList().add(data1);
+							}
+
+						}
+
+					}
+				}
+
+		} catch (Exception e) {
+			LOGGER.info("" + e);
+		}
+		subscriberData.setCurrencyCode(getPlatformLoginData().getCurrencyCode());
+		return subscriberData;
+	}
+
+
+	@Override
+	public Map<Integer, String> getproducttype(String subscriberMobNo) {
+		List<InventoryMgmt> list = iUserMgmntDAO.getProductDetail(subscriberMobNo);
+		Map<Integer,String> productMap=new HashMap<>();
+		for(InventoryMgmt inventoryvalue:list){
+			productMap.put(inventoryvalue.getProductId().getId(), inventoryvalue.getProductId().getProductName());
+		}
+		return productMap;
+	}
+
+
+	@Override
+	public String getqueryPUK(String productId,LoginData logindata) {
+		String message="";
+		try {
+		//	String url="http://localhost:8080/securebanking/services/inventoryservice/pukCode";
+		 String url = getPlatformLoginData().getPukUrl();
+			String key=logindata.getKey();
+			InventoryRequest payload=new InventoryRequest();
+			payload.setMobileNumber(logindata.getUsername());
+			payload.setProductId(Integer.parseInt(productId));
+			
+			 String encryptedRequestData = KeyEncryptionUtils.encryptUsingKey(key, payload);
+			
+			
+			
+			 RestTemplate restTemplate = new RestTemplate();
+			   RequestObject  reqObject = new RequestObject();
+			   reqObject.setTokenId(logindata.getTokenId());
+			   reqObject.setPayload(encryptedRequestData);
+			   
+			   ResponseEntity<ResponseObject> response = restTemplate.postForEntity(url, reqObject, ResponseObject.class);
+			   ResponseObject pukResponse = response.getBody();
+			  
+			   if(pukResponse.getStatus()==200){
+				   message=SystemConstant.PUKCODE_SENT;
+			   }
+			   else{
+				   message= pukResponse.getMessage();
+			   }
+			  
+		} catch (Exception e) {
+			LOGGER.info(""+e);
+		}
+		
+		return message;
+	}
+
+
+	@Override
+	public SubscriberData getProductDetails(SubscriberData subscriberData) {
+		List<SubscriberData> productList=new ArrayList<>();
+		
+		try {
+			List<InventoryMgmt> list = iUserMgmntDAO.getProductDetail(subscriberData.getMobile());
+			
+			if (list != null && !list.isEmpty()  )
+				for (InventoryMgmt inventoryMgmt : list) {
+					Issuance issuance=iUserMgmntDAO.getIssuanceDetail(subscriberData.getMobile());
+					SubscriberData data1 = new SubscriberData();
+					data1.setProductName(inventoryMgmt.getProductId().getProductName());
+					data1.setStatus(inventoryMgmt.getProductStatus());
+					//data1.setStartDate(inventoryMgmt.getEditDate().toString());
+					data1.setStartDate(issuance.getCreatedAt().toString());
+					
+					/*if(inventoryMgmt.getEditDate()!=null){
+					data1.setStartDate(KeyEncryptionUtils.dateToString(inventoryMgmt.getEditDate(), SystemConstant.TRANSACTION_DATE_TIME_FORMAT));
+					}*/
+					data1.setId(inventoryMgmt.getId());
+					data1.setProductId(inventoryMgmt.getProductId().getId());
+					data1.setProductType(inventoryMgmt.getProductId().getType());
+					data1.setComment(inventoryMgmt.getReasonForDeactivation());
+					productList.add(data1);
+				}
+			
+		}catch(Exception e){
+			LOGGER.info(""+e);
+		}
+		subscriberData.setProductList(productList);
+		return subscriberData;
+	}
+
+
+	@Override
+	@Transactional
+	public boolean productsInfo(String productId,String mobileNumber,String comment) {
+		
+		Boolean  status=iUserMgmntDAO.getProductDetailById(productId,comment);
+		
+		try {
+			Subscriber subscriber=iUserMgmntDAO.getSubscriber(mobileNumber);
+			iUserMgmntDAO.updateWalletStatus(subscriber.getId());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		/*inventoryMgmt.setProductStatus("BLOCK_BY_CUST");*/
+		
+		// TODO Auto-generated method stub
+		return status;
+	}
+
+
+	@Override
+	public SubscriberData getproductList(SubscriberData subscriberData) {
+		LOGGER.info("***Start  method getproducttype() in CustomerCareService ");
+
+
+		List<Products> list=  iUserMgmntDAO.getproductList();
+
+		Map<String,String> map= new HashMap<>();
+		Map<Integer,Map<String,String>> productType= new HashMap<>();
+
+		try {
+			for(Products products:list)
+			{
+				map.put(products.getProductName(), products.getType());
+				productType.put(products.getId(),map);
+			}
+		} catch (Exception e) {
+			LOGGER.info("****Exception  method getproducttype() in CustomerCareService"+e);
+
+		}
+		subscriberData.setProductMapNew(list);
+		LOGGER.info("***Start  method getproducttype() in CustomerCareService");
+
+		return subscriberData;
+	}
+
+
+	@Override
+	@Transactional
+	public List<SubscriberData> queryStatus(HttpSession session, String subscriberMobNo) {
+		List<SubscriberData> querydetails=new ArrayList<>();
+		List<CustomerQueryLog> customerqueryloglist = iUserMgmntDAO.queryStatus(session,subscriberMobNo );
+		if(customerqueryloglist!=null){
+			for(CustomerQueryLog customerquerylogdetail:customerqueryloglist){
+				SubscriberData queryData=new SubscriberData();
+				queryData.setId(customerquerylogdetail.getId());
+				queryData.setSubquerydescription(customerquerylogdetail.getSubqueryId().getSubquery());
+				queryData.setCreatedDate(KeyEncryptionUtils.dateToString(customerquerylogdetail.getCreatedon(), SystemConstant.TRANSACTION_DATE_TIME_FORMAT));
+				queryData.setQueryStatus(customerquerylogdetail.getStatus());
+				querydetails.add(queryData);
+			}
+		}
+			
+		
+		return querydetails;
+	}
+	@Override
+	public String getTypeOfDeployment() {
+		return getPlatformLoginData().getDeploymentFor();
+	}
+
+
+	@Override
+	@Transactional
+	public void saveNewPinCode(SubscriberData subscriberData) {
+		try{
+			PinCodeInfo addressinfo= new PinCodeInfo();
+			addressinfo.setCountry(subscriberData.getCountry() );
+			addressinfo.setState(subscriberData.getState() );
+			addressinfo.setRegion(subscriberData.getRegion() );
+			addressinfo.setPincode(subscriberData.getPinCode().toString());
+			addressinfo.setLocation(subscriberData.getLocality() );
+			iUserMgmntDAO.saveNewPinCode(addressinfo);
+			}catch(Exception e){
+				LOGGER.debug("Exception occurred in saveNewPinCode() method in BankService "+e);
+			}
+			
+	}
+
+
+	@Override
+	public boolean validateOtpPassword(LoginData loginData, String confirmOtp,String mobNo) {
+		try{
+		String otpValue = (String) cacheManager.getFromCache(mobNo, MemCacheUtils.OTPCACHE);
+	       
+	       if(otpValue != null && otpValue.equals(confirmOtp))
+	       {  
+	    	return true;   
+	       }
+		}
+		catch(Exception e){
+			LOGGER.debug("Exception occurred in saveNewPinCode() method in BankService "+e);
+		}
+		return false;
+	}
+
+
+	@Override
+	public boolean sendOtpforWallet(LoginData loginData, String mobNo) {
+		try{
+
+			String url = selfcaredata.getSendOtpURL();
+			
+			String key=loginData.getKey();
+			/*InventoryRequest payload=new InventoryRequest();
+			payload.setMobileNumber(logindata.getUsername());
+			payload.setProductId(Integer.parseInt(productId));
+			*/
+			PayloadData payloadData = new PayloadData();
+			payloadData.setCustomerMsisdn(mobNo);
+			payloadData.setOtpLength("6");
+			String encryptedRequestData = KeyEncryptionUtils.encryptUsingKey(key, payloadData);
+			
+			
+			
+			 RestTemplate restTemplate = new RestTemplate();
+			   RequestObject  reqObject = new RequestObject();
+			   reqObject.setChannelId(1);
+			   reqObject.setTokenId(loginData.getTokenId());
+			   reqObject.setPayload(encryptedRequestData);
+			   
+			   ResponseEntity<ResponseObject> response = restTemplate.postForEntity(url, reqObject, ResponseObject.class);
+			   ResponseObject pukResponse = response.getBody();
+			  
+			   if(pukResponse.getStatus()==200){
+				   return true;
+			   }
+			  
+			
+			
+			}
+			catch(Exception e){
+				LOGGER.debug("Exception occurred in saveNewPinCode() method in BankService "+e);
+			}
+			return false;
+	}
+
+
+	@Override
+	public boolean checkWallet(String userMobile, String walletId) {
+		
+		boolean result=false;
+		try {
+			result=iUserMgmntDAO.checkWallet(userMobile,walletId);
+			
+			
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+		return result;
+		}
+
+
+	@Override
+	public int subscriberAlreadySignedUp(String mobile) throws Exception {
+		int count=0;
+		try
+		{
+			LOGGER.info("Execution start of checkDuplicateName() method in BankService");
+		      Subscriber sub = iUserMgmntDAO.validateMobile(mobile);
+		      if(sub != null && sub.getUserPassword() != null)
+		    	  count =  1;
+		}catch(Exception ex)
+		{
+			LOGGER.debug("Exception occurred in checkDuplicateName() method in BankService "+ex);
+		}
+		LOGGER.info("Execution end of checkDuplicateName() method in BankService");
+		return count;
+	}
+
+
+	@Override
+	public SubscriberData getSubscriberByMobileNumber(String mobileNumber) throws Exception {
+		SubscriberData subscriberDto=null;
+		try {
+			Subscriber subscriber=iUserMgmntDAO.validateMobile(mobileNumber);
+			if(subscriber!=null) {
+				subscriberDto=new SubscriberData();
+				subscriberDto.setName(subscriber.getName());
+			//	subscriberDto.setName(subscriber.getName());
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return subscriberDto;
+	}
+	
+	@Override
+	public SubscriberData getSubscriberByMobileNumberandOtp(String mobile) {
+		SubscriberData subscriberDto=null;
+		try {
+			Subscriber subscriber=iUserMgmntDAO.validateMobile(mobile);
+			if(subscriber!=null) {
+				subscriberDto=new SubscriberData();
+				//subscriberDto.setName(subscriber.getName());
+				subscriberDto.setName(subscriber.getName());
+				subscriberDto.setMobilenumber(subscriber.getMsisdn());
+				//subscriberDto.setId(subscriber.getId());
+				subscriberDto.setAccountId(subscriber.getId());
+				
+				
+			
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return subscriberDto;
+	}
+	
+	
+	@Transactional
+	@Override
+	public void checkAndChangeWalletPin(SubscriberData subscriberData, Integer subscriberId, HttpSession session) throws Exception {
+		try {
+		
+			LOGGER.info("***** Start of checkAndChangeWalletPin() method in UserMgmntService *****");
+			
+				UserWalletDetails walletDetails = iUserMgmntDAO.getwallet(subscriberId);
+				
+				if(walletDetails != null)
+				{
+					String currentDbWalletPin = walletDetails.getTransactionPin();
+					
+					if(currentDbWalletPin != null && currentDbWalletPin.equalsIgnoreCase(subscriberData.getCurrentWalletPin()))
+					{
+						walletDetails.setTransactionPin(subscriberData.getNewWalletPin());
+						
+						boolean updateStatus = iUserMgmntDAO.updateWalletDetails(walletDetails);
+						
+						if(updateStatus)
+							subscriberData.setMessage("SUC:Wallet PIN updated Successfully.");
+						else
+							subscriberData.setMessage("FAL:Wallet PIN updation failed.");
+						
+					}else{
+						
+						subscriberData.setMessage("FAL:Current Wallet PIN does not match.");
+					}
+				}else{
+					subscriberData.setMessage("FAL:Customer Wallet Not found.");
+				}
+			} catch (Exception ex) {
+			LOGGER.info("Exception occurred in checkAndChangeWalletPin() method in UserMgmntService --->" + ex);
+		}
+		LOGGER.info("***** End of checkAndChangeWalletPin() method in UserMgmntService *****--->");
+		
+	}
+
+
+	@Override
+	public SubscriberData ChangeWalletPin(SubscriberData subscriberData, Integer subscriberid) {
+		try {
+			
+			
+			LOGGER.info("***** Start of ChangeWalletPin() method in UserMgmntService *****");
+			
+				
+				List<Banks> banks=null;
+				if(subscriberData.getOtpOnForgotPass() != null)
+				{
+					//cacheManager.addToCache(accountDetails.getMsisdn()+"_"+UserServiceConstants.FORGET_PASS_KEY, otpValue, MemCacheUtils.OTPCACHE);
+					String otpFromChache = (String)memCacheManager.getFromCache(subscriberData.getMobilenumber()+"_FORGOT_PASSWD",   MemCacheUtils.OTPCACHE);
+					if(otpFromChache.equalsIgnoreCase(subscriberData.getOtpOnForgotPass())) {
+						UserWalletDetails walletDetails = userWalletDetailsEntityUtils.getEntityByParamId("userid",subscriberid, "UserWalletDetails.findByUserId", UserWalletDetails.class);
+                       walletDetails.setTransactionPin(subscriberData.getNewPassword());
+                       //banks=bankEntityUtils.getAllEntities("Banks.findActiveBank", Banks.class);
+                       //walletDetails.setBankId(banks.get(0));
+                      // walletDetails.setCurrentBalance("0.0");
+                       
+						boolean updateStatus = iUserMgmntDAO.updateWalletDetails(walletDetails);
+						
+						if(updateStatus)
+							subscriberData.setMessage("Wallet PIN updated Successfully.");	
+               else
+					subscriberData.setMessage("Wallet PIN updation failed.");
+					}
+					else {
+						subscriberData.setMessage("Invalid OTP.");
+					}
+						
+						
+					
+				}
+			} catch (Exception ex) {
+			LOGGER.info("Exception occurred in ChangeWalletPin() method in UserMgmntService --->" + ex);
+		}
+		LOGGER.info("***** End of ChangeWalletPin() method in UserMgmntService *****--->");
+		return subscriberData;
+	}
+
+
+	@Override
+	public SubscriberData forgetedPassword(SubscriberData subscriberData) throws Exception {
+try {
+			
+	String otpFromChache = (String)memCacheManager.getFromCache(subscriberData.getMobilenumber()+"_FORGOT_PASSWD",   MemCacheUtils.OTPCACHE);
+	if(otpFromChache.equalsIgnoreCase(subscriberData.getOtpOnForgotPass())) {
+			String resourceUrl  = getPlatformLoginData().getForgetedPasswordUrl();
+			 RestTemplate restTemplate = new RestTemplate();
+			   ForgetPasswordRequest requestObject = new ForgetPasswordRequest();
+			   String newpassword = ThreeDESEncryption.getHashedString(subscriberData.getNewPassword());
+				
+			
+				
+				  requestObject.setChannelId(1);
+				requestObject.setStepNo(2);
+				requestObject.setUserTypeId(1);
+				requestObject.setUserId(subscriberData.getMobilenumber());
+				requestObject.setOtpValue(subscriberData.getOtpOnForgotPass());
+				requestObject.setNewPassword(newpassword);
+				
+				ResponseEntity<ResponseObject> response = restTemplate.postForEntity(resourceUrl, requestObject, ResponseObject.class);
+				
+				
+				   
+				subscriberData.setCode(response.getBody().getStatus());
+				if(response.getStatusCode() == HttpStatus.OK)
+					{	
+					if(response.getBody().getStatus().intValue() == ErrorCodes.REQUEST_SUCCESSFUL.getCode().intValue())
+						  subscriberData.setMessage("Password Changed Successfully."); 
+					 else
+					   subscriberData.setMessage(response.getBody().getMessage()); 
+				}
+				else{
+					  subscriberData.setMessage("Server Error");
+				}
+	}else{
+		 subscriberData.setMessage("Invalid OTP");
+	}
+			
+		} catch (Exception ex) {
+			LOGGER.info("Exception occurred in setForgetedPassword() method in UserMgmntService --->" + ex);
+		}
+		return subscriberData;
+	}
+
+
+	
+		
+	}
+	
+
+		
+		

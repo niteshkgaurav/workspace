@@ -1,0 +1,3403 @@
+package com.ng.sb.controller;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
+import javax.persistence.PersistenceException;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.ServletContextAware;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.RequestContextUtils;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.ng.sb.common.controller.ASecureBankingController;
+import com.ng.sb.common.dataobject.AccountList;
+import com.ng.sb.common.dataobject.AutoSearch;
+import com.ng.sb.common.dataobject.BankData;
+import com.ng.sb.common.dataobject.InventoryCheckData;
+import com.ng.sb.common.dataobject.InventoryData;
+import com.ng.sb.common.dataobject.InventoryMgmtData;
+import com.ng.sb.common.dataobject.LoginData;
+import com.ng.sb.common.dataobject.OrderShipData;
+import com.ng.sb.common.dataobject.PackingGroupData;
+import com.ng.sb.common.dataobject.PhysicalRecieptData;
+import com.ng.sb.common.dataobject.PlatformLoginData;
+import com.ng.sb.common.dataobject.ShortOverlaysData;
+import com.ng.sb.common.dataobject.ShortShipmentData;
+import com.ng.sb.common.dataobject.ViewOrderData;
+import com.ng.sb.common.exception.InventoryDetailsException;
+import com.ng.sb.common.exception.NoDataFoundException;
+//import com.ng.sb.common.exception.NoDataFoundException;
+import com.ng.sb.common.model.Products;
+import com.ng.sb.common.util.ProductsTypeUtil;
+import com.ng.sb.common.util.ResponseEntityUtil;
+import com.ng.sb.common.util.SystemConstant;
+import com.ng.sb.service.AutoSearchService;
+import com.ng.sb.service.IAccountCreationService;
+import com.ng.sb.service.IInventoryMgmtService;
+import com.ng.sb.service.ILoginService;
+import com.ng.sb.service.ISessionService;
+
+@Controller
+@RequestMapping(value = "/inventoryMgmtController")
+public class InventoryMgmtController extends ASecureBankingController implements ServletContextAware {
+	@Autowired
+	private PlatformLoginData platformLoginData;
+	public static final String PRODUCTMAP = "ProductMap";
+	public static final String PRODUCTTYPEMAP = "productTypeMap";
+	public static final String MASTERVERSIONLIST = "masterVersionList";
+	public static final String INVENTORYMGMTDATA = "inventoryMgmtData";
+	public static final String I_DISPLAY_START = "iDisplayStart";
+	public static final String ORDER_SHIP_DATA = "orderShipData";
+	public static final String SHIPPING_LIST = "ShippingList";
+	public static final String DUPLICATEMSG = "duplicateMsg";
+	public static final String RECORDSOPAGE = "recordsopage";
+	public static final String MVMAP = "mvMap";
+	public static final String PO_RAISE = "PoRaise";
+	public static final String SHORTSHIPMENT_DATAS = "shortShipmentDatas";
+	public static final String ORDERNO = "orderNo";
+	public static final String DATE_FORMAT = "yyyy-MM-dd";
+	public static final String READER_MAP = "ReaderMap";
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(InventoryMgmtController.class);
+	@Autowired
+	ILoginService loginService;
+	@Autowired
+	private IAccountCreationService aIAccountCreationService;
+	@Autowired
+	private MessageSource messageSource;
+	ServletContext context;
+	@Autowired
+	ISessionService managemetImpl;
+	@Autowired
+	private IInventoryMgmtService iInventoryMgmtService;
+	private ModelMap modelmap = new ModelMap();
+
+	@Autowired
+	private AutoSearchService autoSearchservice;
+
+	@Override
+	public void setServletContext(ServletContext context) {
+		this.context = context;
+	}
+
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		binder.registerCustomEditor(Date.class, new CustomDateEditor(new SimpleDateFormat("yyyy-MM-dd"), true, 10));
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * 
+	 * @return
+	 */
+
+	// --------------------meenu ajmani-------------
+
+	private ModelMap addMapData(ModelMap map, Integer menuId, Integer submenuId, String successmsg, String errormsg) {
+		map.addAttribute(SystemConstant.MENU_ID, menuId);
+		map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+		map.addAttribute(SystemConstant.SUCCESSMESSAGE, successmsg);
+		map.addAttribute(SystemConstant.ERRORMESSAGE, errormsg);
+		return map;
+
+	}
+
+	@RequestMapping(value = "/getBoxDetailsInventory", method = RequestMethod.GET)
+	public ModelAndView getBoxDetailsInventory(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData, HttpSession session,
+			HttpServletRequest request, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+
+		ModelMap map = new ModelMap();
+		List<InventoryMgmtData<?>> inventoryMgmtDataList = new ArrayList<>();
+		String view = null;
+		int productId = 0;
+		int mvId = 0;
+		try {
+			LOGGER.info("**********Execution start of method getBoxDetailsInventory() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				String productVersion = request.getParameter("pn");
+				String masterVersionName = request.getParameter("mv");
+				String groupCode = loginData.getGroupCode();
+				Integer loginId = loginData.getAccountId();
+				productId = iInventoryMgmtService.getIdOfProduct(productVersion);
+				mvId = iInventoryMgmtService.getIdOfMV(masterVersionName);
+				inventoryMgmtDataList = iInventoryMgmtService.getAllBoxDetails(productId, mvId, groupCode, loginId);
+				inventoryMgmtData.setInventoryMgmtDataList(inventoryMgmtDataList);
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,177
+				view = "BoxDetails";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTION caught ON Method getBoxDetailsInventory() in controller InventoryMgmtController :"
+					+ e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		LOGGER.info("Execution end of Method getBoxDetailsInventory() in controller InventoryMgmtController ");
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/poRaise", method = RequestMethod.GET)
+	public ModelAndView poRaise(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestAttribute(value = "submenuId", required = false) Integer submenuId, HttpServletRequest request)
+			throws Exception {
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData();
+		ModelMap map = new ModelMap();
+		String view = "";
+		Integer vid = 0;
+
+		try {
+			LOGGER.info("**********Execution start of method PoRaisePage() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				String groupCode = loginData.getGroupCode();
+				vid = iInventoryMgmtService.getVendorId();
+				if ("PP".equals(groupCode)) {
+					map.addAttribute("producttypeMap", iInventoryMgmtService.getProductTypeList());
+				}
+				Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
+				if (flashMap != null) {
+					menuId = (Integer) flashMap.get("menuId");
+					submenuId = (Integer) flashMap.get("submenuId");
+				}
+				map.addAttribute("minimumPackageSize", platformLoginData.getMinimumPackageSize());
+				map.addAttribute(PRODUCTMAP, iInventoryMgmtService.getProducts());
+				map.addAttribute(MVMAP, iInventoryMgmtService.getMasterVersionList());
+				map.addAttribute("vMap", iInventoryMgmtService.getVendorList(vid));
+				
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				map.addAttribute(DUPLICATEMSG, "");
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId); // 177
+				map.addAttribute(DUPLICATEMSG, "");
+				map.addAttribute(SystemConstant.MENU_ID, menuId); // 190
+				view = PO_RAISE;
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryPoRaisePage() in controller InventoryMgmtController :" + e);
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/poRaise", method = RequestMethod.POST)
+	public String submitPoRaise(Model model, HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("productType") String productType,
+
+			@RequestParam("qty") String qty, @RequestParam("mvId") String mvId,
+			@RequestParam(value = "selectOnbehalf", required = false) String selectOnbehalf,
+			RedirectAttributes redirectAttr, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+
+		String onBehalfAccount = inventoryMgmtData.getOnBehalfAccount();
+		try {
+			LOGGER.info("**********Execution start of method inventoryPoRaiseSubmit() in controller InventoryMgmtController "
+					+ inventoryMgmtData.getVendorId());
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Integer productId = iInventoryMgmtService.getProductByName(productType).getId();
+			
+				String orderTypeVl = inventoryMgmtData.getOrderTypeVl();
+				String groupCode = loginData.getGroupCode();
+				Integer userLoginId = loginData.getUserLoginId();
+				Integer loginId = loginData.getAccountId();
+				List<Integer> accntList = getPoAccntId(orderTypeVl, loginData, groupCode, onBehalfAccount,
+						selectOnbehalf);
+				Boolean flag = false;
+				Integer[] integer = new Integer[4];
+				String[] string = new String[6];
+				integer[0] = loginId;
+				integer[1] = userLoginId;
+				integer[2] = inventoryMgmtData.getVendorId();
+				string[0] = productId + "";
+				string[1] = "";
+				string[2] = groupCode;
+				string[3] = qty;
+				string[4] = orderTypeVl;
+				string[5] = "";
+
+				loginData = managemetImpl.getSessionInfo(session);
+				redirectAttr.addFlashAttribute(SystemConstant.MENU_ID, menuId);
+				redirectAttr.addFlashAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				if (loginData.isSessionInfo()) {
+					flag = iInventoryMgmtService.submitPoRaiseDetails(inventoryMgmtData, accntList.get(0),
+							accntList.get(1), "0", integer, string, productId, mvId, qty, qty);
+					if (flag) {
+						map = addMapData(map, menuId, submenuId, "Order Raised Successfully", ""); // 190,177
+						redirectAttr.addFlashAttribute("successMessage", "Order Raised Successfully");
+					} else {
+						map = addMapData(map, menuId, submenuId, "", "Kindly try again"); // 190,177
+						redirectAttr.addFlashAttribute("successMessage", "Kindly try again.");
+					}
+				} else {
+					redirectAttr.addFlashAttribute("successMessage", getProperty(SystemConstant.SESSION_NOT_VALID));
+				}
+			} else {
+				LOGGER.info("Session Expired on Execution of Method poRaise() in controller InventoryMgmtController ");
+				redirectAttr.addFlashAttribute("successMessage", loginData.getStatusMessage());
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method poRaise() post in controller InventoryMgmtController :" + e);
+			redirectAttr.addFlashAttribute("successMessage", getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+		}
+		LOGGER.info("******Execution Of Method poRaise() post done successfully in InventoryMgmtController ");
+		return "redirect:poRaise";
+	}
+	@Transactional
+	public List<Integer> getPoAccntId(String orderTypeVl, LoginData loginData, String groupCode,
+			String onBehalfAccount, String selectOnbehalf) throws Exception {
+		List<Integer> accnList = new ArrayList<>();
+		Integer parentId = 0;
+		Integer accountId = 0;
+		if ("SELF".equals(orderTypeVl)) {
+			accountId = loginData.getAccountId();
+			parentId = loginData.getParentId();
+		}
+		if ("ONBEHALF".equals(orderTypeVl)) {
+			accountId = iInventoryMgmtService.getAccountIdByName(selectOnbehalf);
+			parentId = iInventoryMgmtService.getParentId(accountId);
+		}
+		if (accountId != null) {
+			accnList.add(accountId);
+		}
+		accnList.add(parentId);
+		return accnList;
+	}
+
+	@RequestMapping(value = { "/getBoxDetail", "/ajax/getBoxDetail" }, method = RequestMethod.POST)
+	@ResponseBody
+	public List<InventoryMgmtData<?>> getBoxDetail(@RequestParam(value = "orderTypeVl") String orderTypeVl,
+			HttpSession session) {
+		List<InventoryMgmtData<?>> inventoryMgmtDataList = null;
+		try {
+			LOGGER.debug("***********boxDetailsController *************");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+			Integer accountId = loginData.getAccountId();
+			loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				inventoryMgmtDataList = iInventoryMgmtService.getInventoryMgmtByGcAndId(groupCode, accountId);
+			} else {
+				modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.SESSION_NOT_VALID));
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exceptions occured in : " + e);
+			modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+		}
+
+		return inventoryMgmtDataList;
+	}
+
+	@RequestMapping(value = { "/getBoxDetailAjax", "/ajax/getBoxDetailAjax" }, method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, List<InventoryMgmtData<?>>> getBoxDetailAjax(
+			@RequestParam(value = "orderTypeVl") String orderTypeVl, HttpSession session) {
+		Map<String, List<InventoryMgmtData<?>>> response = new HashMap<String, List<InventoryMgmtData<?>>>();
+		List<InventoryMgmtData<?>> inventoryMgmtDataList = null;
+		try {
+			LOGGER.debug("***********boxDetailsController *************");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+			Integer accountId = loginData.getAccountId();
+			loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				inventoryMgmtDataList = iInventoryMgmtService.getInventoryMgmtByGcAndId(groupCode, accountId);
+			} else {
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exceptions occured in : " + e);
+		}
+		response.put("data", inventoryMgmtDataList);
+		return response;
+	}
+
+	@RequestMapping(value = { "/getBoxDetailOnBehalf", "/ajax/getBoxDetailOnBehalf" }, method = RequestMethod.POST)
+	@ResponseBody
+	public List<InventoryMgmtData<?>> getBoxDetail2(@RequestParam(value = "tagName") String tagName, HttpSession session) {
+		List<InventoryMgmtData<?>> inventoryMgmtDataList = null;
+		try {
+			LOGGER.debug("***********boxDetailsController *************");
+
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Integer accountId = iInventoryMgmtService.getAccountIdByName(tagName);
+				String groupCode = iInventoryMgmtService.getGroupCodeByName(tagName);
+				inventoryMgmtDataList = iInventoryMgmtService.getInventoryMgmtByGcAndId(groupCode, accountId);
+			} else {
+				modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.SESSION_NOT_VALID));
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in : controller" + e);
+
+		}
+		LOGGER.info("list size from controller ---> ");
+		return inventoryMgmtDataList;
+	}
+
+	@RequestMapping(value = { "/getBoxDetailOnBehalfAjax", "/ajax/getBoxDetailOnBehalfAjax" }, method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, List<InventoryMgmtData<?>>> getBoxDetailOnBehalfAjax(
+			@RequestParam(value = "tagName") String tagName, HttpSession session) {
+
+		Map<String, List<InventoryMgmtData<?>>> response = new HashMap<String, List<InventoryMgmtData<?>>>();
+		List<InventoryMgmtData<?>> inventoryMgmtDataList = null;
+
+		try {
+			LOGGER.debug("***********boxDetailsController *************");
+
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Integer accountId = iInventoryMgmtService.getAccountIdByName(tagName);
+				String groupCode = iInventoryMgmtService.getGroupCodeByName(tagName);
+				inventoryMgmtDataList = iInventoryMgmtService.getInventoryMgmtByGcAndId(groupCode, accountId);
+			} else {
+				modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.SESSION_NOT_VALID));
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in : controller" + e);
+
+		}
+		LOGGER.info("list size from controller ---> ");
+		response.put("data", inventoryMgmtDataList);
+		return response;
+	}
+
+	@RequestMapping(value = { "/groupCode", "/ajax/groupCode" }, method = RequestMethod.POST)
+	@ResponseBody
+	public String groupCode(@RequestParam(value = "b") String b, HttpSession session) {
+
+		String groupCode = null;
+		try {
+			LOGGER.debug("***********Controller *************");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			groupCode = loginData.getGroupCode();
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in : controller" + e);
+
+		}
+
+		return groupCode;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/getMasterVersionByHostSubVersionId", "/ajax/getMasterVersionByHostSubVersionId" })
+	@ResponseBody
+	public String getMasterVersionByHostSubVersionId(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("hsvId") Integer hsvId, HttpSession session, HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getMasterVersionByHostSubVersionId() in InventoryMgmtController ");
+		String mvDetails = "";
+		try {
+			mvDetails = iInventoryMgmtService.getMvDetailsByHSVId(hsvId);
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getMasterVersionByHostSubVersionId() done InventoryMgmtController "
+					+ ex);
+		}
+		LOGGER.info("******Execution Of Method getMasterVersionByHostSubVersionId() done successfully in InventoryMgmtController ");
+		return mvDetails;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/getOnBehalfDetails", "/ajax/getOnBehalfDetails" })
+	@ResponseBody
+	public InventoryMgmtData<?> getChildInfo(HttpSession session, HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getChildInfo() in InventoryMgmtController ");
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData<>();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				inventoryMgmtData = iInventoryMgmtService.getAccountInfoByID(loginData, "onBehalf");
+
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getChildInfo() done InventoryMgmtController " + ex);
+		}
+		LOGGER.info("******Execution Of Method getChildInfo() done successfully in InventoryMgmtController ");
+		return inventoryMgmtData;
+	}
+
+	@RequestMapping(value = "/inventoryOrderHistory")
+	public ModelAndView inventoryOrderHistory(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData<>();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryOrderHistory() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				view = "InventoryOrderHistory";
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map.addAttribute(SystemConstant.STATUS_MESSAGE, "");
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,125
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryOrderHistory() in controller InventoryMgmtController :"
+					+ e);
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+
+	@RequestMapping(value = "/inventoryCheckStatus", method = RequestMethod.GET)
+	public ModelAndView inventoryCheck(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData<>();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryCheck() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				view = "InventoryCheckStatus";
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,181
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryCheck() in controller InventoryMgmtController :" + e);
+
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = { "/setinventoryCheck", "/ajax/setinventoryCheck" }, method = RequestMethod.GET)
+	@ResponseBody
+	public List getInventoryDetails(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getInventoryDetails() in InventoryMgmtController ");
+		List list = new ArrayList();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				list = iInventoryMgmtService.getInventoryDetails(loginData.getAccountId(), loginData.getGroupCode());
+
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getInventoryDetails() done InventoryMgmtController " + ex);
+		}
+		LOGGER.info("******Execution Of Method getInventoryDetails() done successfully in InventoryMgmtController ");
+		return list;
+	}
+
+	@RequestMapping(value = { "/setinventoryCheck1", "/ajax/setinventoryCheck1" }, method = RequestMethod.GET)
+	@ResponseBody
+	public List getaccountIdName(@RequestParam(value = "accountname") String accountname, HttpSession session) {
+		List data = new ArrayList();
+
+		try {
+			LOGGER.info("******Start Execution of method  getaccountIdName() in InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				data = iInventoryMgmtService.getaccountIdName(accountname);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("******Exception occurs at Method getaccountIdName() done InventoryMgmtController" + e);
+
+		}
+		return data;
+	}
+
+	@RequestMapping(value = { "/getInventoryOrderHistoryByDate", "/ajax/getInventoryOrderHistoryByDate" })
+	@ResponseBody
+	public List getInventoryOrderHistoryByDate(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("orderType") Integer orderType, @RequestParam("orderStatus") String orderStatus,
+			@RequestParam("fromDate") String fromDates, @RequestParam("toDate") String toDates, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getInventoryOrderHistoryByDate() in InventoryMgmtController ");
+		List list = new ArrayList();
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		Date fromDate;
+		Date toDate;
+		try {
+			fromDate = sdf.parse(fromDates);
+			toDate = sdf.parse(toDates);
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				list = iInventoryMgmtService.getInventoryHistoryDetailsByDate(loginData.getAccountId(), orderType,
+						orderStatus, fromDate, toDate);
+
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getInventoryOrderHistoryByDate() done InventoryMgmtController "
+					+ ex);
+		}
+		LOGGER.info("******Execution Of Method getInventoryOrderHistoryByDate() done successfully in InventoryMgmtController ");
+		return list;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/inventoryOrderCancelledByChild", "/ajax/inventoryOrderCancelledByChild" })
+	@ResponseBody
+	public List inventoryOrderCancelledByChild(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("orderStatus") String orderStatus, @RequestParam("orderId") Integer orderId,
+			@RequestParam("cancelRejectReason") String cancelRejectReason, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  inventoryOrderCancelledByChild() in InventoryMgmtController ");
+		List list = new ArrayList();
+		try {
+			Integer orderType = inventoryMgmtData.getOrderType();
+
+			String[] strings = new String[2];
+
+			strings[0] = inventoryMgmtData.getToDate();
+			strings[1] = inventoryMgmtData.getFromDate();
+			String orderNumber = inventoryMgmtData.getOrderNumber();
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			if (loginData.isSessionInfo()) {
+
+				list = iInventoryMgmtService.orderCancelledBySelf(loginData, orderType, orderStatus, strings, orderId,
+						orderNumber, cancelRejectReason);
+
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method inventoryOrderCancelledByChild() done InventoryMgmtController "
+					+ ex);
+		}
+		LOGGER.info("******Execution Of Method inventoryOrderCancelledByChild() done successfully in InventoryMgmtController ");
+		return list;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/inventoryOrderRejectedByParent", "/ajax/inventoryOrderRejectedByParent" })
+	@ResponseBody
+	public List inventoryOrderRejectedByParent(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("orderStatus") String orderStatus, @RequestParam("orderId") Integer orderId,
+			@RequestParam("cancelRejectReason") String cancelRejectReason, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  inventoryOrderRejectedByParent() in InventoryMgmtController ");
+		List list = new ArrayList();
+		String[] strings = new String[2];
+
+		strings[0] = inventoryMgmtData.getToDate();
+		strings[1] = inventoryMgmtData.getFromDate();
+		Integer orderType = inventoryMgmtData.getOrderType();
+		String orderNumber = inventoryMgmtData.getOrderNumber();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			if (loginData.isSessionInfo()) {
+
+				list = iInventoryMgmtService.orderRejectedByParent(loginData, orderType, orderStatus, strings, orderId,
+						orderNumber, cancelRejectReason);
+
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method inventoryOrderRejectedByParent() done InventoryMgmtController "
+					+ ex);
+		}
+		LOGGER.info("******Execution Of Method inventoryOrderRejectedByParent() done successfully in InventoryMgmtController ");
+		return list;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/inventoryOrderRejectedInShipping", "/ajax/inventoryOrderRejectedInShipping" })
+	@ResponseBody
+	public List inventoryOrderRejectedInShipping(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("orderId") Integer orderId, @RequestParam("orderNumber") String orderNumber,
+			@RequestParam("cancelRejectReason") String cancelRejectReason, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  inventoryOrderRejectedInShipping() in InventoryMgmtController ");
+		List list = new ArrayList();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				list = iInventoryMgmtService.orderRejectedInShipping(loginData, orderId, orderNumber,
+						cancelRejectReason);
+
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method inventoryOrderRejectedInShipping() done InventoryMgmtController "
+					+ ex);
+		}
+		LOGGER.info("******Execution Of Method inventoryOrderRejectedInShipping() done successfully in InventoryMgmtController ");
+		return list;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/inventoryShippingPage")
+	public ModelAndView inventoryShippingPage(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData<>();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryShippingPage() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,126
+				inventoryMgmtData = iInventoryMgmtService.getAccountInfoByID(loginData, "shipping");
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				view = "InventoryShipping";
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryShippingPage() in controller InventoryMgmtController :"
+					+ e);
+
+		}
+		LOGGER.info("Execution end of Method inventoryShippingPage() in controller InventoryMgmtController ");
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/inventoryTracking")
+	public ModelAndView inventoryEdit(HttpSession httpSession,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) {
+		Map<?, ?> acountuserinfovalues = null;
+		ModelMap objModelMap = new ModelMap();
+
+		InventoryData objID = null;
+		String view = null;
+		String logername = null;
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(httpSession);
+			if (loginData.isSessionInfo()) {
+				LOGGER.info("<************* Start inventoryTracking() of inventoryController ************>");
+				objModelMap = new ModelMap();
+				objID = new InventoryData();
+				LoginData logondata = (LoginData) httpSession.getAttribute("loginData");
+				logername = logondata.getUsername();
+				objModelMap.addAttribute("logername", logername);
+				objModelMap.addAttribute("acountuserinfovalues", acountuserinfovalues);
+				objModelMap.addAttribute("acountTypeId", logondata.getAccountTypeId());
+				objModelMap.addAttribute("inventoryTrackingDataAttr", objID);
+				objModelMap = addMapData(objModelMap, menuId, submenuId, "", ""); // 15,40
+				view = "InventoryTracking";
+			} else {
+				httpSession.setAttribute(SystemConstant.STATUS_MESSAGE, loginData.getStatusMessage());
+				return new ModelAndView(loginData.getView(), objModelMap);
+			}
+		} catch (Exception ex) {
+			LOGGER.info("Exception accur in inventoryTracking() ===>>>" + ex);
+		}
+		LOGGER.info("<************* Ending inventoryTracking() of inventoryController ************>");
+		return new ModelAndView(view, objModelMap);
+	}
+
+	/**
+	 * @param loginas
+	 * @param httpSession
+	 * @return
+	 */
+	@RequestMapping(value = { "/inventoryTrackOnLoad", "/ajax/inventoryTrackOnLoad" })
+	@ResponseBody
+	public List<InventoryData> getinventoryTrackOnLoadReq(@RequestParam("loginas") String loginas,
+			HttpSession httpSession) {
+		List<InventoryData> valuesOnLoad = null;
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(httpSession);
+			if (loginData.isSessionInfo()) {
+				LOGGER.info("<************* Start getinventoryTrackOnLoadReq() of inventoryController ************>");
+				LoginData logondata = (LoginData) httpSession.getAttribute("loginData");
+				int grpID = logondata.getGroupId();
+				int acntid = logondata.getAccountId();
+				valuesOnLoad = iInventoryMgmtService.getValuesByAcntTypId(acntid, grpID);
+			}
+		} catch (Exception ex) {
+			LOGGER.info("Exception accur in getinventoryTrackOnLoadReq() ===>>>" + ex);
+		}
+		LOGGER.info("<************* End getinventoryTrackOnLoadReq() of inventoryController ************>");
+		return valuesOnLoad;
+	}
+
+	/**
+	 * @param inventoryData
+	 * @param httpSession
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/hostdistributormapping", "/ajax/hostdistributormapping" })
+	@ResponseBody
+	public Map getHostDistributorReq(@ModelAttribute(value = "inventoryTrackingDataAttr") InventoryData inventoryData,
+			HttpSession httpSession, HttpServletRequest request) {
+		Map<Integer, String> hostDist = null;
+		try {
+			LOGGER.info("<******************* Start of  getHostDistributorReq() ************>");
+			hostDist = new HashMap<>();
+			hostDist = iInventoryMgmtService.getDistributorByHost(request.getParameter("hostID"));
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getHostDistributorReq() ===>>>" + ex);
+		}
+		LOGGER.info("<******************* End of getHostDistributorReq() ************>");
+		return hostDist;
+	}
+
+	@RequestMapping(value = { "/distributorsubdistributormapping", "/ajax/distributorsubdistributormapping" })
+	@ResponseBody
+	public Map getDistSubDistributorReq(
+			@ModelAttribute(value = "inventoryTrackingDataAttr") InventoryData inventoryData, HttpSession httpSession,
+			HttpServletRequest request) {
+		Map<Integer, String> distSubDist = null;
+		try {
+			LOGGER.info("<**************** Start of getDistSubDistributorReq() ****************>");
+			distSubDist = new HashMap<>();
+			distSubDist = iInventoryMgmtService.getSubDistributorByDistributor(request.getParameter("distributorId"));
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getDistSubDistributorReq() ===>> " + ex);
+		}
+		LOGGER.info("<**************** End of getDistSubDistributorReq() ****************>");
+		return distSubDist;
+	}
+
+	/**
+	 * @param inventoryData
+	 * @param httpSession
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/subdistributorretailermapping", "/ajax/subdistributorretailermapping" })
+	@ResponseBody
+	public Map getSubDistributorRetailerReq(
+			@ModelAttribute(value = "inventoryTrackingDataAttr") InventoryData inventoryData, HttpSession httpSession,
+			HttpServletRequest request) {
+		Map<Integer, String> subdistRetailer = null;
+		try {
+			LOGGER.info("<**************** Start of getSubDistributorRetailerReq() ****************>");
+			subdistRetailer = new HashMap<>();
+			subdistRetailer = iInventoryMgmtService.getRetailerBySubDistributory(request.getParameter("subdistId"));
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getSubDistributorRetailerReq() ===>> " + ex);
+		}
+		LOGGER.info("<**************** End of getSubDistributorRetailerReq() ****************>");
+		return subdistRetailer;
+	}
+
+	/**
+	 * @param inventoryData
+	 * @param httpSession
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/retailerBCmapping", "/ajax/retailerBCmapping" })
+	@ResponseBody
+	public Map getRetailerBcMappingReq(
+			@ModelAttribute(value = "inventoryTrackingDataAttr") InventoryData inventoryData, HttpSession httpSession,
+			HttpServletRequest request) {
+		Map<Integer, String> retailerBc = null;
+		try {
+			LOGGER.info("<**************** Start of getRetailerBcMappingReq() ****************>");
+			retailerBc = new HashMap<>();
+			retailerBc = iInventoryMgmtService.getBcByRetailer(request.getParameter("retailerId"));
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getRetailerBcMappingReq() ===>> " + ex);
+		}
+		LOGGER.info("<**************** End of getRetailerBcMappingReq() ****************>");
+		return retailerBc;
+	}
+
+	/**
+	 * @param hostId
+	 * @param distId
+	 * @param productId
+	 * @param httpSession
+	 * @param request
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/versionNum", "/ajax/versionNum" }, method = RequestMethod.POST)
+	@ResponseBody
+	public Map getVersionNum(@RequestParam("hostId") String hostId, @RequestParam("distId") String distId,
+			@RequestParam("productId") int productId, HttpSession httpSession, HttpServletRequest request) {
+		Map<Integer, String> versionNum = null;
+		try {
+			LOGGER.info("<**************** Start of getVersionNum() ****************>");
+			versionNum = new HashMap<>();
+			versionNum = iInventoryMgmtService.getVersionNumber(productId, hostId, distId);
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getSubDistributorRetailerReq() ===>> " + ex);
+		}
+		LOGGER.info("<**************** End of getVersionNum() ****************>");
+		return versionNum;
+	}
+
+	/**
+	 * @param httpSession
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/versionDescription", "/ajax/versionDescription" })
+	@ResponseBody
+	public String getVersionDescription(HttpSession httpSession, HttpServletRequest request) {
+		String description = null;
+		try {
+			LOGGER.info("<**************** Start of getVersionDescription() ****************>");
+			if (!request.getParameter("verIdVal").contains(","))
+				description = iInventoryMgmtService.getDescription(Integer.parseInt(request.getParameter("verIdVal")));
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getVersionDescription() ===>> " + ex);
+
+		}
+		LOGGER.info("<**************** End of getVersionDescription() ****************>");
+		return description;
+	}
+
+	/**
+	 * @param inventoryData
+	 * @param productId
+	 * @param versionId
+	 * @param hostId
+	 * @param distId
+	 * @param subDistId
+	 * @param retailerId
+	 * @param bcId
+	 * @param acntTypId
+	 * @param httpSession
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/inventoryDetails", "/ajax/inventoryDetails" })
+	@ResponseBody
+	public String getInventoryDetailsOnSubmit(@RequestParam List<String> myarray, HttpServletRequest request) {
+
+		String invnData = null;
+		try {
+			LOGGER.info("<**************** Start of getInventoryDetailsOnSubmit() ****************>");
+
+			Integer iDisplayStart = Integer.valueOf(request.getParameter(I_DISPLAY_START));
+			String searchParameter = request.getParameter("sSearch");
+			Integer pageDisplayLength = Integer.valueOf(request.getParameter("iDisplayLength"));
+			Integer pageNumber = 0;
+
+			if (null != request.getParameter(I_DISPLAY_START)) {
+				pageNumber = (Integer.valueOf(request.getParameter(I_DISPLAY_START)) / 10) + 1;
+			}
+
+			String columnIndex = request.getParameter("iSortCol_0");
+			String order = request.getParameter("sSortDir_0");
+			String[] parameters = new String[] { myarray.get(0), myarray.get(1), myarray.get(2), myarray.get(3),
+					myarray.get(4), searchParameter, myarray.get(5), columnIndex };
+
+			invnData = iInventoryMgmtService.getInventory(parameters, Integer.parseInt(myarray.get(0)), iDisplayStart,
+					pageDisplayLength, pageNumber, order);
+
+		} catch (Exception ex) {
+			LOGGER.info("Exception occured in getVersionDescription() ===>> " + ex);
+		}
+		LOGGER.info("<**************** End of getInventoryDetailsOnSubmit() ****************>");
+		return invnData;
+	}
+
+	/**
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/getAccountListByParentId", "/ajax/getAccountListByParentId" })
+	@ResponseBody
+	public List<?> getAccountListByParentId(@RequestParam("parentId") Integer parentId,
+			@RequestParam("accountType") String accountType, HttpSession session, HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getAccountListByParentId() in InventoryMgmtController ");
+		List<?> childAccountList = new ArrayList<>();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				childAccountList = iInventoryMgmtService.getAccountListByParentId(parentId);
+				LOGGER.info("method getAccountListByParentId() executed succefully in InventoryMgmtController");
+			} else {
+				LOGGER.info("Session Expire in getAccountListByParentId() in InventoryMgmtController");
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getAccountListByParentId() done InventoryMgmtController "
+					+ ex);
+		}
+		LOGGER.info("******Execution Of Method getAccountListByParentId() done successfully in InventoryMgmtController ");
+		return childAccountList;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = { "/getInventoryOrderHistoryByAccountId", "/ajax/getInventoryOrderHistoryByAccountId" })
+	@ResponseBody
+	public List getInventoryOrderHistoryByAccountId(
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("accountId") Integer accountId, HttpSession session, HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getInventoryOrderHistoryByAccountId() in InventoryMgmtController ");
+		List list = new ArrayList();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				list = iInventoryMgmtService.getInventoryHistoryDetailsByAccountId(loginData.getAccountId(), accountId);
+			}
+
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getInventoryOrderHistoryByAccountId() done InventoryMgmtController "
+					+ ex);
+		}
+		return list;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/InventoryRangeDetailsPage")
+	public ModelAndView inventoryRangeDetailsPage(Model model, HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method InventoryRangeDetailsPage() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				String groupCode = loginData.getGroupCode();
+				OrderShipData orderShipData = new OrderShipData();
+				List<OrderShipData> availableStockListByRange = iInventoryMgmtService.getRangeDetailsByPidAndMvId(
+						loginData.getAccountId(), inventoryMgmtData.getProductId(), inventoryMgmtData.getMvId(),
+						groupCode);
+				inventoryMgmtData.setAvailableStockList(availableStockListByRange);
+				session.setAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map.addAttribute(ORDER_SHIP_DATA, orderShipData);
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,126
+				map.addAttribute("availableStockListByRange", availableStockListByRange);
+				view = "InventoryRangeDetailsPage";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+
+			LOGGER.info("EXCEPTION OCCURE ON Method InventoryRangeDetailsPage() in controller InventoryMgmtController :"
+					+ e);
+			view = SystemConstant.HOME_PAGE;
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/getBoxDetailsByRangeId", "/ajax/getBoxDetailsByRangeId" })
+	@ResponseBody
+	public List<?> getBoxDetailsByRangeId(@RequestParam("rangeId") Integer rangeId, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getBoxDetailsByRangeId() in InventoryMgmtController ");
+		List<?> availableBoxDetailsList = new ArrayList<>();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				availableBoxDetailsList = iInventoryMgmtService.getBoxDetailsList(rangeId, loginData.getGroupCode());
+				LOGGER.info("method getBoxDetailsByRangeId() executed succefully in InventoryMgmtController");
+			} else {
+				LOGGER.info("Session Expire in getBoxDetailsByRangeId() in InventoryMgmtController");
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getBoxDetailsByRangeId() done InventoryMgmtController " + ex);
+		}
+		LOGGER.info("******Execution Of Method getBoxDetailsByRangeId() done successfully in InventoryMgmtController ");
+		return availableBoxDetailsList;
+	}
+
+	/**
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/getBoxSeDetailsByBoxId", "/ajax/getBoxSeDetailsByBoxId" })
+	@ResponseBody
+	public List<?> getBoxSeDetailsByBoxId(@RequestParam("boxId") Integer boxId, HttpSession session,
+			HttpServletRequest request) {
+		LOGGER.info("******Start Execution of method  getBoxDetailsByRangeId() in InventoryMgmtController ");
+		List<?> availableBoxSEDetailsList = new ArrayList<>();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				availableBoxSEDetailsList = iInventoryMgmtService.getBoxSeDetailsList(boxId, loginData.getGroupCode(),
+						loginData.getAccountId());
+				LOGGER.info("method getBoxDetailsByRangeId() executed succefully in InventoryMgmtController");
+			} else {
+				LOGGER.info("Session Expire in getBoxDetailsByRangeId() in InventoryMgmtController");
+			}
+		} catch (Exception ex) {
+			LOGGER.info("******Exception occurs at Method getBoxDetailsByRangeId() done InventoryMgmtController " + ex);
+		}
+		LOGGER.info("******Execution Of Method getBoxDetailsByRangeId() done successfully in InventoryMgmtController ");
+		return availableBoxSEDetailsList;
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/inventoryShippingPreviewPage")
+	public ModelAndView inventoryShippingPreviewPage(Model model, HttpSession session,
+			@ModelAttribute(value = "orderShipData") OrderShipData orderShipData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryShippingPreviewPage() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				InventoryMgmtData<?> inventoryMgmtData = (InventoryMgmtData<?>) session.getAttribute(INVENTORYMGMTDATA);
+				OrderShipData orderShipDataNew = iInventoryMgmtService.getOrderDetaisAndBoxDetails(orderShipData,
+						inventoryMgmtData);
+				map.addAttribute(ORDER_SHIP_DATA, orderShipDataNew);
+				session.setAttribute(ORDER_SHIP_DATA, orderShipDataNew);
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,126
+				view = "InventoryShippingPreviewPage";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryShippingPreviewPage() in controller InventoryMgmtController :"
+					+ e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		LOGGER.info("Execution end of Method inventoryShippingPreviewPage() in controller InventoryMgmtController ");
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * @param
+	 * @param session
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/inventoryShippingSubmit")
+	public ModelAndView inventoryShippingSubmit(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData<>();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryShippingSubmit() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				OrderShipData orderShipData = (OrderShipData) session.getAttribute(ORDER_SHIP_DATA);
+				String deployementType = iInventoryMgmtService.getDeplyementType();
+				InventoryMgmtData<?> inventoryMgmtDataTemp = iInventoryMgmtService.inventoryShippingSubmit(
+						orderShipData, deployementType, loginData);
+				inventoryMgmtData = iInventoryMgmtService.getAccountInfoByID(loginData, "shipping");
+
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				map = addMapData(map, menuId, submenuId, inventoryMgmtDataTemp.getSuccessMessage(),
+						inventoryMgmtDataTemp.getErrorMessage()); // 15,126
+				view = "InventoryShipping";
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryShippingSubmit() in controller InventoryMgmtController :"
+					+ e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = { "/getTags", "/ajax/getTags" }, method = RequestMethod.GET)
+	@ResponseBody
+	public List<String> getTag(@RequestParam(value = "tagName") String tagName,
+			@RequestParam(value = "selectType") String selectType, @RequestParam(value = "filter") String filter,
+			HttpSession session) {
+
+		List<String> data = new ArrayList<>();
+		try {
+
+			LOGGER.info("**********Execution start of method getTag() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+			Integer accountInfo = loginData.getAccountId();
+			AutoSearch autoSearch = new AutoSearch();
+
+			if (loginData.isSessionInfo()) {
+				autoSearch.setSelectType(selectType);
+				autoSearch.setTagName(tagName);
+				autoSearch.setFilter(filter);
+				autoSearch.setAccountInfo(accountInfo.toString());
+				autoSearch.setSearchCriteria(groupCode);
+				data = (List<String>) autoSearchservice.getSearchByInfo(autoSearch);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method getTag() in controller InventoryMgmtController :" + e);
+		}
+		return data;
+	}
+
+	@RequestMapping(value = "/inventoryViewOrder")
+	public ModelAndView inventoryViewOrder(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ViewOrderData viewOrderData = new ViewOrderData();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryViewOrder() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				view = "viewOrder";
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,178
+				map.addAttribute(SystemConstant.STATUS_MESSAGE, "");
+				map.addAttribute(SystemConstant.MENU_ID, menuId); // 190
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId); // 178
+				map.addAttribute("viewOrderData", viewOrderData);
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTIONs OCCURE ON Method inventoryViewOrder() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		LOGGER.info("Execution end of Method inventoryViewOrder() in controller InventoryMgmtController ");
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/ShipOrder", method = RequestMethod.GET)
+	public ModelAndView shipOrder(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		InventoryMgmtData<?> inventoryMgmtData = new InventoryMgmtData();
+		String view = "";
+		ModelMap map = new ModelMap();
+		try {
+			LOGGER.info("**********Execution start of method ShipOrder() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				inventoryMgmtData = iInventoryMgmtService.shipOrder(loginData.getUserLoginId(),
+						loginData.getGroupCode());
+
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,166
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				view = "ShipOrder";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("************EXCEPTION caught ON Method ShipOrder() in controller InventoryMgmtController**************"
+					+ e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+
+	}
+
+	@RequestMapping(value = "/OrderRecieved", method = RequestMethod.GET)
+	public ModelAndView orderRecieved(Model model, HttpSession session,
+			@RequestParam(value = "pageid", required = false) Integer pageid, InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) String menuId,
+			@RequestParam(value = "submenuId", required = false) String submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		Integer pagId = pageid;
+		InventoryMgmtData<?> mgmtData = new InventoryMgmtData<>();
+
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method OrderRecieved() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Integer recordsPerPage = 10;
+				if (pagId == null) {
+					pagId = 1;
+				}
+				//mgmtData = iInventoryMgmtService.getOrderRecievedData(pageid, recordsPerPage, loginData.getAccountId());
+				//mgmtData.setProductmap(iInventoryMgmtService.getEntityMap());
+
+				List<Products> products = iInventoryMgmtService.getProducts();
+				
+				Integer noofrecords = iInventoryMgmtService.getOfrecords(loginData.getAccountId());
+				int noOfPages = 0;
+				if (noofrecords != null) {
+					noOfPages = (int) Math.ceil(noofrecords * 1.0 / recordsPerPage);
+				}
+				
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+
+			map.addAttribute("noOfPages", noOfPages);
+				map.addAttribute("currentPage", pagId);
+				map = addMapData(map, (menuId != null) ? Integer.parseInt(menuId) : null,
+						(submenuId != null) ? Integer.parseInt(submenuId) : null, "", ""); // 190,182
+				view = "OrderRecieved";
+
+				map.addAttribute(INVENTORYMGMTDATA, mgmtData);
+				map.addAttribute("products", products);
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			LOGGER.info("EXCEPTION OCCURE ON Method OrderRecieved() in controller InventoryMgmtController :" + e);
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/shortShipment")
+	public ModelAndView showShortShipment(@ModelAttribute("shortShipmentData") ShortShipmentData shortShipmentData,
+			@RequestParam(value = "orderId") Integer orderId, @RequestParam(value = "productId") Integer productId,
+			@RequestParam(value = "mvId") Integer masterVersion, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		String view = null;
+		try {
+			LOGGER.info("**********Execution start of method showShortShipment() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				List<ShortShipmentData> shortShipmentDatas = iInventoryMgmtService.getBoxDetails(orderId, productId,
+						masterVersion);
+				modelmap.addAttribute(SHORTSHIPMENT_DATAS, shortShipmentDatas);
+				modelmap.addAttribute(SystemConstant.MENU_ID, menuId);
+				modelmap.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				view = "ShortShipment";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURED IN Method showShortShipment() in controller InventoryMgmtController :" + e);
+			modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, modelmap);
+	}
+
+	@RequestMapping(value = "/inventoryCheck")
+	public ModelAndView getInventoryCheck(@ModelAttribute("inventoryCheckData") InventoryCheckData inventoryCheckData,
+			@RequestParam(value = "orderNo", required = false) Integer orderNo, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		Integer orderNo1 = orderNo;
+		String view = null;
+		InventoryCheckData checkData = new InventoryCheckData();
+		try {
+			LOGGER.info("**********Executions start of method getInventoryCheck() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				checkData.setLoginId(loginData.getAccountId());
+				checkData = iInventoryMgmtService.getInventoryDetail(checkData, orderNo1);
+				modelmap.addAttribute("inventoryCheckData", checkData);
+				modelmap.addAttribute(SystemConstant.MENU_ID, menuId);
+				modelmap.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				if (orderNo1 == null) {
+					orderNo1 = checkData.getOrderNo();
+				}
+
+				view = "InventoryCheck";
+				session.setAttribute(ORDERNO, orderNo1);
+			} else {
+
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTIONs OCCURED IN Method getInventoryCheck() in controller InventoryMgmtController :" + e);
+			modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, modelmap);
+	}
+
+	@RequestMapping(value = "/setInventoryCheck")
+	public ModelAndView setInventoryCheck(@ModelAttribute("inventoryCheckData") InventoryCheckData inventoryCheckData,
+			HttpSession session, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		String view = null;
+
+		InventoryCheckData checkData = new InventoryCheckData();
+		try {
+			LOGGER.info("**********Executions start of method getInventoryCheck() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				checkData.setLoginId(loginData.getAccountId());
+				if (session.getAttribute(ORDERNO) == null) {
+					checkData = iInventoryMgmtService.getInventoryDetail(checkData, null);
+				} else {
+					checkData = iInventoryMgmtService.getInventoryDetail(checkData,
+							Integer.parseInt(session.getAttribute(ORDERNO).toString()));
+				}
+				view = "InventoryCheck";
+				modelmap.addAttribute("inventoryCheckData", checkData);
+				modelmap.addAttribute(SystemConstant.MENU_ID, menuId);
+				modelmap.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTIONs OCCURED IN Method getInventoryCheck() in controller InventoryMgmtController :" + e);
+			modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		return new ModelAndView(view, modelmap);
+	}
+
+	@RequestMapping(value = "/getShortShipmentWithFilter")
+	public ModelAndView getShortShipmentWithFilter(
+			@ModelAttribute("shortShipmentData") ShortShipmentData shortShipmentData, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		String view = null;
+		ShortShipmentData shipmentData = new ShortShipmentData();
+
+		try {
+			LOGGER.info("**********Execution start of method getInventoryCheck() in controllerr InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				shipmentData = iInventoryMgmtService.getBoxDetailsWithFilter(shipmentData, loginData.getAccountId());
+				modelmap.addAttribute(SHORTSHIPMENT_DATAS, shipmentData);
+				modelmap = addMapData(modelmap, menuId, submenuId, "", ""); // 15,161
+				view = "ShortShipmentWithFilter";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURED IN Method getInventoryCheck() in controller InventoryMgmtController :" + e);
+			modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, modelmap);
+
+	}
+
+	@RequestMapping(value = "/setShortShipment")
+	public ModelAndView setShortShipmentWithFilter(
+			@ModelAttribute("shortShipmentData") ShortShipmentData shortShipmentData, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		String view = null;
+		ShortShipmentData shipmentData = new ShortShipmentData();
+		try {
+			LOGGER.info("**********Execution starts of method getInventoryCheck() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				shipmentData = iInventoryMgmtService.getBoxDetailsWithFilter(shortShipmentData,
+						loginData.getAccountId());
+				shipmentData = iInventoryMgmtService.getBoxDetailList(shipmentData);
+				modelmap.addAttribute(SHORTSHIPMENT_DATAS, shipmentData);
+				modelmap = addMapData(modelmap, menuId, submenuId, "", ""); // 15,161
+				modelmap.addAttribute(SHORTSHIPMENT_DATAS, shipmentData);
+
+				view = "ShortShipmentWithFilter";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTION OCCURED IN Method getInventoryCheck() in controller InventoryMgmtController :" + e);
+			modelmap.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		return new ModelAndView(view, modelmap);
+
+	}
+
+	@ResponseBody
+	@PostMapping(value = "/ajax/getOrderReceivedDetails")
+	public Map<String, Object> getorderDetails(HttpSession session,
+			@RequestParam(value = "fromDate", required = false) java.sql.Date fromDate,
+			@RequestParam(value = "endDate", required = false) java.sql.Date endDate,
+			@RequestParam(value = "item", required = false) Integer itemId,
+			@RequestParam(value = "status", required = false) String status) throws Exception {
+		Map<String, Object> map = new HashMap<>();
+		try {
+
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			if (loginData.isSessionInfo()) {
+				
+				map = iInventoryMgmtService.getorderDetails(map, itemId, fromDate, endDate, status,
+						loginData.getAccountId(),loginData.getGroupCode());
+			} else {
+				
+				return (Map<String, Object>) new HashMap<>().put("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+
+			LOGGER.info("EXCEPTION OCCURE ON Method getorderDetails() in controller InventoryMgmtController :" + e);
+			return (Map<String, Object>) new HashMap<>().put(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+		}
+		return map;
+	}
+
+	@RequestMapping(value = { "/removeOrderlist", "/ajax/removeOrderlist" }, method = RequestMethod.POST)
+	@ResponseBody
+	public String removeOrderlist(@RequestParam(value = "id") Integer id) throws Exception {
+		return iInventoryMgmtService.removeOrderlist(id);
+	}
+
+	@RequestMapping(value = { "/viewOrderDetailsForAccount", "/ajax/viewOrderDetailsForAccount" }, method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> getViewOrderDetails(HttpSession session,
+			@RequestParam(value = "fromDate", required = false) java.sql.Date fromDate,
+			@RequestParam(value = "endDate", required = false) java.sql.Date endDate,
+			@RequestParam(value = "viewfor", required = false) Integer viewfor,
+
+			@RequestParam(value = "items", required = false) String[] str) {
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		String ponumber = str[2];
+		String selectOnBehalf = str[1];
+		String status = str[0];
+
+		List<ViewOrderData> viewOrderDataList = new ArrayList<>();
+		LoginData loginData;
+		Integer accInfoId;
+		try {
+			loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+
+			if (loginData.isSessionInfo()) {
+				accInfoId = loginData.getAccountId();
+				Integer[] params = new Integer[] { viewfor,  accInfoId };
+				if (StringUtils.isEmpty(ponumber)) {
+					viewOrderDataList = iInventoryMgmtService.getViewOrderInfo(params, new Date(fromDate.getTime()),
+							new Date(endDate.getTime()), status, selectOnBehalf, groupCode);
+				} else {
+					viewOrderDataList = iInventoryMgmtService.getViewOrderInfo(params, new Date(fromDate.getTime()),
+							new Date(endDate.getTime()), status, selectOnBehalf, groupCode, ponumber);
+				}
+				HashSet<Integer> set = new HashSet<>();
+				for (ViewOrderData data : viewOrderDataList) {
+					set.add(data.getMvId());
+				}
+				viewOrderDataList = iInventoryMgmtService.setUnitStock(viewOrderDataList, set, loginData);
+				map.put("orders", viewOrderDataList);
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method removeOrderlist() in controller InventoryMgmtController :" + e);
+		}
+		return map;
+	}
+
+	@RequestMapping(value = "/viewOrderDetails", method = RequestMethod.GET)
+	public Map<String, Object> viewOrderDetails(HttpSession session,
+			@RequestParam(value = "fromDate", required = false) java.sql.Date fromDate,
+			@RequestParam(value = "endDate", required = false) java.sql.Date endDate,
+			@RequestParam(value = "viewfor", required = false) Integer viewfor,
+			@RequestParam(value = "orderBy", required = false) Integer orderBy,
+			@RequestParam(value = "items", required = false) String[] str) {
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		String ponumber = str[2];
+		String selectOnBehalf = str[1];
+		String status = str[0];
+
+		List<ViewOrderData> viewOrderDataList = new ArrayList<>();
+		LoginData loginData;
+		Integer accInfoId;
+		try {
+			loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+
+			if (loginData.isSessionInfo()) {
+				accInfoId = loginData.getAccountId();
+				Integer[] params = new Integer[] { viewfor, orderBy, accInfoId };
+				if (StringUtils.isEmpty(ponumber)) {
+					viewOrderDataList = iInventoryMgmtService.getViewOrderInfo(params, new Date(fromDate.getTime()),
+							new Date(endDate.getTime()), status, selectOnBehalf, groupCode);
+				} else {
+					viewOrderDataList = iInventoryMgmtService.getViewOrderInfo(params, new Date(fromDate.getTime()),
+							new Date(endDate.getTime()), status, selectOnBehalf, groupCode, ponumber);
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method removeOrderlist() in controller InventoryMgmtController :" + e);
+		}
+		map.put("dataList", viewOrderDataList);
+		return map;
+	}
+
+	@RequestMapping(value = "/ShippingHistoryView")
+	public ModelAndView shippingHistoryView(Model model, HttpSession session,
+			@RequestParam(value = "pageid", required = false) Integer pageid, HttpServletResponse response,
+			HttpServletRequest request, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		InventoryMgmtData<?> inventoryMgmtData2 = null;
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method shippingHistoryView() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				inventoryMgmtData2 = iInventoryMgmtService.getShippingHistory(loginData.getAccountId());
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData2);
+
+				if (inventoryMgmtData2.getShippinghistorylist().isEmpty()) {
+					map.addAttribute("inventory", null);
+				} else {
+					map.addAttribute("inventory", "1");
+				}
+				view = "ShippingHistoryView";
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,178
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.debug(
+					"EXCEPTION caught ON Method OrderRecieved() in controller InventoryMgmtController :--->>>>****", e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = "ShippingHistoryView";
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = { "/cancelOrder", "/ajax/cancelOrder" }, method = RequestMethod.POST)
+	@ResponseBody
+	public List<ViewOrderData> cancelOrderDetails(HttpSession session,
+			@RequestParam(value = "fromDate", required = false) java.sql.Date fromDate,
+			@RequestParam(value = "endDate", required = false) java.sql.Date endDate,
+			@RequestParam(value = "viewfor", required = false) Integer viewfor,
+			
+			@RequestParam(value = "orderId", required = false) Integer orderId,
+			@RequestParam(value = "items", required = false) String[] str) {
+
+		String selectOnBehalf = str[1];
+		String status = str[0];
+
+		List<ViewOrderData> viewOrderDataList = new ArrayList<>();
+		LoginData loginData;
+		try {
+			loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+			if (loginData.isSessionInfo()) {
+				//iInventoryMgmtService.getO
+				iInventoryMgmtService.cancelOrder(orderId);
+				Integer accInfoId = loginData.getAccountId();
+				Integer[] params = new Integer[] { viewfor,  accInfoId };
+				viewOrderDataList = iInventoryMgmtService.getViewOrderInfo(params,
+						new java.util.Date(fromDate.getTime()), new java.util.Date(endDate.getTime()), status,
+						selectOnBehalf, groupCode);
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exception occure on Execution of Method cancelOrderDetails() in controller InventoryMgmtController "
+					+ e);
+		}
+		return viewOrderDataList;
+	}
+
+	@RequestMapping(value = "/OrderRecieved", params = "ship", method = RequestMethod.POST)
+	public ModelAndView toBeShipped(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+
+		ModelMap map = new ModelMap();
+		InventoryMgmtData<?> data = inventoryMgmtData;
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method toBeShipped() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			if (loginData.isSessionInfo()) {
+
+				data = iInventoryMgmtService
+						.getTobeShippedNew(data, loginData.getAccountId(), loginData.getGroupCode());
+
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,182
+				view = "toBeShipped";
+				map.addAttribute(INVENTORYMGMTDATA, data);
+				map.addAttribute("requestData", inventoryMgmtData);
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method toBeShipped() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+
+	}
+
+	@RequestMapping(value = "/physicalRecieptView")
+	public ModelAndView inventoryPhysicalReceipt(Model model, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		PhysicalRecieptData physicalRecieptData = new PhysicalRecieptData();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Executions start of method inventoryPhysicalReceipt() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				view = "physicalReciept";
+				List<PhysicalRecieptData> datas = iInventoryMgmtService.getOrderInfo(loginData.getAccountId());
+				physicalRecieptData.setPhysicalRecieptDataList(datas);
+				Map<Integer, String> orderDetails = iInventoryMgmtService.getOrderDetailsForWrHouse(loginData
+						.getAccountId());
+				List<Products> products = iInventoryMgmtService.getProducts();
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,180
+
+				physicalRecieptData.setOrderDetails(orderDetails);
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				map.addAttribute("physicalRecieptData", physicalRecieptData);
+				map.addAttribute("products", products);
+				// map.addAttribute("vMap",
+				// iInventoryMgmtService.getVendorList(2));
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURES ON Method inventoryPhysicalReceipt() in controller InventoryMgmtController :"
+					+ e);
+			view = SystemConstant.HOME_PAGE;
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		LOGGER.info("<------------Execution end of Method inventoryPhysicalReceipt() in controller InventoryMgmtController--------->");
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/toBeShipped", method = RequestMethod.GET)
+	public ModelAndView showShippedData(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method saveShippedData() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			if (loginData.isSessionInfo()) {
+				view = "toBeShipped";
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,164
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method saveShippedData() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+
+	}
+
+	@RequestMapping(value = "/toBeShipped", method = RequestMethod.POST)
+	public ModelAndView saveShippedData(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData inventoryMgmtData1,
+			@RequestParam(value = "packagingchk", required = false) String[] packagingchk,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = "";
+
+		InventoryMgmtData inventoryMgmtData = inventoryMgmtData1;
+		try {
+			LOGGER.info("**********Execution start of method saveShippedData() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				Integer accountId = loginData.getAccountId();
+				Integer accountInfoId = loginData.getAccountTypeId();
+				Integer userLoginId = loginData.getUserLoginId();
+				String gptype = loginData.getGroupCode();
+				iInventoryMgmtService.doShipping(inventoryMgmtData, packagingchk, accountId, userLoginId, gptype);
+				List<Integer> orderidlist = iInventoryMgmtService.getorderid(inventoryMgmtData);
+				int[] arr = new int[orderidlist.size()];
+				for (int i = 0; i < orderidlist.size(); i++) {
+					arr[i] = orderidlist.get(i);
+				}
+				iInventoryMgmtService.saveTobeshippedData(inventoryMgmtData, arr);
+				inventoryMgmtData = iInventoryMgmtService.getShippingList(inventoryMgmtData);
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,182
+				view = SHIPPING_LIST;
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+			map.addAttribute("statusMessage", "Order shipped successfully.");
+
+		} catch (Exception e) {
+
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTION OCCURE ON Method saveShippedData() in controller InventoryMgmtController :" + e);
+			map.addAttribute("errorMessage", "Unable to ship data.");
+		}
+		return new ModelAndView(view, map);
+
+	}
+
+	@RequestMapping(value = "/ShippingList")
+	public ModelAndView shippingList(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+
+		ModelMap map = new ModelMap();
+		String view = "";
+		InventoryMgmtData<?> inventoryData = null;
+		try {
+			LOGGER.info("**********Execution start of method ShippingList() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				// inventoryData =
+				// iInventoryMgmtService.getShippingList(inventoryData);
+				inventoryData = iInventoryMgmtService.getShippedListByShippedToId(loginData.getAccountId());
+				map.addAttribute(INVENTORYMGMTDATA, inventoryData);
+				map.addAttribute(SystemConstant.STATUS_MESSAGE, "");
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,182
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				view = SHIPPING_LIST;
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.debug("EXCEPTIONs OCCURE ON Method ShippingList() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/physicalRecieptSubmit", method = RequestMethod.POST)
+	public ModelAndView physicalRecieptSubmit(
+			@ModelAttribute(value = "physicalRecieptData") PhysicalRecieptData physicalRecieptData,
+			HttpSession session, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		PhysicalRecieptData physicalRecieptData1 =  null;
+		LoginData loginData =  null;
+		map.addAttribute(SystemConstant.MENU_ID, menuId);
+		map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+		String view = "";
+		try {
+
+			physicalRecieptData1=	new PhysicalRecieptData();
+
+			LOGGER.info("**********Execution start of method inventoryCheck() in controller InventoryMgmtController ");
+			loginData = managemetImpl.getSessionInfo(session);
+			Boolean result;
+			if (loginData.isSessionInfo()) {
+
+				List<PhysicalRecieptData> datas = iInventoryMgmtService.getOrderInfo(loginData.getAccountId());
+				physicalRecieptData1.setPhysicalRecieptDataList(datas);
+				Map<Integer, String> orderDetails = iInventoryMgmtService.getOrderDetailsForWrHouse(loginData
+						.getAccountId());
+				List<Products> products = iInventoryMgmtService.getProducts();
+				map.addAttribute("products", products);
+				view = "physicalReciept";
+				physicalRecieptData1.setOrderDetails(orderDetails);
+				physicalRecieptData1.setQrCodeValue("");
+				
+				String qrdata = physicalRecieptData.getQrCodeValue();
+				String[] boxInfo = qrdata.split("\\|");
+				Integer accountId = loginData.getAccountId();
+				Integer userLoginId = loginData.getUserLoginId();
+				Integer accountInfoId = loginData.getAccountTypeId();
+				if (physicalRecieptData.getScanId() == 1) {
+
+					result = iInventoryMgmtService.getDataFromInventory(physicalRecieptData, accountInfoId, accountId,loginData.getGroupCode(),
+							userLoginId, boxInfo);
+				} else {
+					result = iInventoryMgmtService.getDataFromInventoryForSingle(physicalRecieptData, accountInfoId,
+							accountId, userLoginId, boxInfo);
+				}
+				if (result) {
+					map.addAttribute("msgId", "Inventory Updated Successfully");
+				} else {
+					map.addAttribute(SystemConstant.ERRORMESSAGE, "Data corresponding to these details already exist");
+				}
+				
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+			}
+		}
+		catch(InventoryDetailsException inventoryDetailsEx){
+			LOGGER.info("Exception occured ..........." + inventoryDetailsEx.getLocalizedMessage());
+			map.addAttribute(SystemConstant.ERRORMESSAGE, "You can not physically receive more units then ordered.");
+			view = "physicalReciept";
+		}
+		catch(NoDataFoundException noDataFoundException){
+			LOGGER.info("Exception occured ..........." + noDataFoundException.getLocalizedMessage());
+			map.addAttribute(SystemConstant.ERRORMESSAGE, "Data not found in inventory.");
+			view = "physicalReciept";
+		}
+		
+		catch (PersistenceException persistEx) {
+			LOGGER.info("Exception occured ..........." + persistEx.getLocalizedMessage());
+			map.addAttribute(SystemConstant.ERRORMESSAGE, "Data corresponding to these details already exist");
+			view = "physicalReciept";
+		} catch (Exception e) {
+			LOGGER.info("Exception in method inventoryCheck() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		map.addAttribute("physicalRecieptData", physicalRecieptData1);
+		map.addAttribute(SystemConstant.STATUS_MESSAGE, "Inventory Updated Successfully");
+		map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/SoldUnsoldProducts", method = RequestMethod.GET)
+	public ModelAndView soldUnsoldProducts(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+
+		ModelMap map = new ModelMap();
+		String view = "";
+		InventoryMgmtData<?> inventoryMgmtData2 = new InventoryMgmtData<>();
+		try {
+			LOGGER.info("**********Execution start of method SoldUnsoldProducts() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				inventoryMgmtData2 = iInventoryMgmtService.getSoldUnsoldProducts(loginData.getAccountId());
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData2);
+				map.addAttribute(SystemConstant.STATUS_MESSAGE, "");
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,175
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				view = "SoldUnsoldProducts";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception ex) {
+			LOGGER.debug("EXCEPTIONs  OCCURE ON Method ShippingList() in controller InventoryMgmtController :", ex);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/SoldUnsoldProducts", method = RequestMethod.POST)
+	public ModelAndView showSoldUnsoldProducts(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		InventoryMgmtData<?> mgmtData = new InventoryMgmtData<>();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method SoldUnsoldProducts() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				view = "SoldUnsoldProducts";
+				mgmtData = iInventoryMgmtService.getSoldUnsoldProducts(mgmtData, loginData.getAccountId());
+				map.addAttribute(INVENTORYMGMTDATA, mgmtData);
+				map = addMapData(map, menuId, submenuId, "", ""); // 15,175
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				map.addAttribute(SystemConstant.STATUS_MESSAGE, "");
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.info("EXCEPTIONS OCCURE ON Method ShippingList() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/tobeshippedplus", method = RequestMethod.GET)
+	public ModelAndView toBeShippedPlus(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam("orderdate") String orderdate, @RequestParam("orderfor") String orderfor,
+			HttpServletRequest request, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId,
+			@RequestParam("shippingId") Integer shippingId) throws Exception {
+
+		ModelMap map = new ModelMap();
+		String view = "";
+
+		try {
+
+			LOGGER.info("**********Execution start of method toBeShippedPlus() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				String startDate = orderdate.replace("/", "-");
+				SimpleDateFormat sdf1 = new SimpleDateFormat(DATE_FORMAT);
+				java.util.Date date = sdf1.parse(startDate);
+				java.sql.Date sqlStartDate = new java.sql.Date(date.getTime());
+				
+				Map<Integer, String> orderno = iInventoryMgmtService.getOrderNo(sqlStartDate, orderfor,shippingId);
+				view = "tobeshippedplus";
+				map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData);
+				map.addAttribute(SystemConstant.STATUS_MESSAGE, "");
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,182
+				map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+				inventoryMgmtData.setId(shippingId);
+				inventoryMgmtData.setOrderMap(orderno);
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			view = SystemConstant.HOME_PAGE;
+			LOGGER.debug("EXCEPTION OCCURE ON Method ShippingList() in controller InventoryMgmtController :", e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@RequestMapping(value = "/tobeshippedplus", method = RequestMethod.POST)
+	public ModelAndView toBeShippedPlusSubmit(HttpSession session,
+			@ModelAttribute(value = "inventoryMgmtData") InventoryMgmtData<?> inventoryMgmtData,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = "";
+		InventoryMgmtData<?> inventoryMgmtData3 = new InventoryMgmtData<>();
+		try {
+			LOGGER.info("**********Execution start of method toBeShippedPlus() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				String groupCode = loginData.getGroupCode();
+				Integer userLoginId = loginData.getUserLoginId();
+				Integer loginId = loginData.getAccountId();
+				loginData = managemetImpl.getSessionInfo(session);
+				Boolean response = iInventoryMgmtService.submitToBeShippedPlus(groupCode, userLoginId, loginId,
+						inventoryMgmtData);
+				inventoryMgmtData3 = iInventoryMgmtService.getShippingList(inventoryMgmtData);
+				if (response) {
+					map.addAttribute(SystemConstant.STATUS_MESSAGE, "Product Shipped Successfully");
+					map = addMapData(map, menuId, submenuId, "", ""); // 190,182
+					map.addAttribute(SystemConstant.GROUPCODE, loginData.getGroupCode());
+					map.addAttribute(INVENTORYMGMTDATA, inventoryMgmtData3);
+					view = SHIPPING_LIST;
+				}
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method ShippingList() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		map.addAttribute(SystemConstant.MENU_ID, menuId);
+		map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param model
+	 * @param session
+	 * @param order
+	 * @param product
+	 * @param mv
+	 * @param menuId
+	 * @param submenuId
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/shortOverlaysView")
+	public ModelAndView shortOverlaysView(Model model, HttpSession session, @RequestParam("order") String order,
+			@RequestParam("product") String product, @RequestParam("mv") String mv,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ShortOverlaysData shortOverlaysData = new ShortOverlaysData();
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryPhysicalReceipt() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				List<ShortOverlaysData> datas = iInventoryMgmtService.getShortOverlays(order, product, mv);
+				shortOverlaysData.setShortOverlaysDataList(datas);
+				map.addAttribute("shortOverlaysData", shortOverlaysData);
+				map.addAttribute(SystemConstant.MENU_ID, menuId);
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				view = "ShortOverlays";
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+
+				return new ModelAndView("login", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTIONS OCCURE ON Method inventoryViewOrder() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		LOGGER.info("Execution end of Method inventoryViewOrder() in controller InventoryMgmtController ");
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param model
+	 * @param session
+	 * @param order
+	 * @param product
+	 * @param mv
+	 * @param menuId
+	 * @param submenuId
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/shortBoxesView")
+	public ModelAndView shortBoxesView(Model model, HttpSession session, @RequestParam("order") String order,
+			@RequestParam("product") String product, @RequestParam("mv") String mv,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = "";
+		try {
+			LOGGER.info("**********Execution start of method inventoryPhysicalReceipt() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				List<String> boxDetail = iInventoryMgmtService.getShortBoxes(order, product, mv,
+						loginData.getAccountId());
+
+				view = "ShortBoxes";
+				map.addAttribute("boxDetail", boxDetail);
+				map.addAttribute(SystemConstant.MENU_ID, menuId);
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method inventoryViewOrder() in controllerr InventoryMgmtController :" + e);
+			view = SystemConstant.HOME_PAGE;
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param product
+	 * @param masterVersion
+	 * @param poNo
+	 * @return
+	 */
+	@RequestMapping(value = { "/getInfoForMvAndProduct", "/ajax/getInfoForMvAndProduct" }, method = RequestMethod.POST)
+	@ResponseBody
+	public String[] getInfoForMvAndProduct(HttpSession session,
+			@RequestParam(value = "product", required = false) String product,
+			@RequestParam(value = "masterVersion", required = false) String masterVersion,
+			@RequestParam(value = "poNo", required = false) String poNo) {
+
+		LoginData loginData;
+
+		String[] productMv = new String[3];
+		try {
+			loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				if (masterVersion.length() > 10) {
+					productMv = iInventoryMgmtService.getProductReaderInfo(product, Integer.valueOf(masterVersion),
+							poNo);
+
+				} else {
+
+					productMv = iInventoryMgmtService.getProductMvInfo(product, masterVersion, poNo);
+				}
+				return productMv;
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method getInfoForMvAndProduct() in controller InventoryMgmtController :"
+					+ e);
+		}
+		return productMv;
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param product
+	 * @param overlayOrCard
+	 * @param cardType
+	 * @param masterVersion
+	 * @return
+	 */
+	@RequestMapping(value = { "/getInfoForMvAndProducts", "/ajax/getInfoForMvAndProducts" }, method = RequestMethod.POST)
+	@ResponseBody
+	public String[] getInfoForMvAndProducts(HttpSession session,
+			@RequestParam(value = "product", required = false) String product,
+			@RequestParam(value = "overlayOrCard", required = false) Integer overlayOrCard,
+			@RequestParam(value = "cardType", required = false) Integer cardType,
+			@RequestParam(value = "masterVersion", required = false) String masterVersion) {
+		LoginData loginData;
+		String[] productMv = new String[3];
+		try {
+			loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				if (overlayOrCard == 2) {
+					productMv = iInventoryMgmtService.getProductCardInfo(product, Integer.valueOf(masterVersion));
+				} else if (overlayOrCard == 1) {
+					productMv = iInventoryMgmtService.getProductMvInfo(product, masterVersion);
+				} else {
+					productMv = iInventoryMgmtService.getProductReaderinfo(product);
+				}
+
+				return productMv;
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method getInfoForMvAndProducts() in controller InventoryMgmtController :"
+					+ e);
+		}
+		return productMv;
+	}
+
+	/**
+	 * 
+	 * @param poNumber
+	 * @param selectOnbehalf
+	 * @param onBehalfAccount
+	 * @param filter
+	 * @param session
+	 * @return
+	 */
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = { "/autoOrderNumber", "/ajax/autoOrderNumber" })
+	@ResponseBody
+	public List<String> autoOrderNumber(@RequestParam(value = "poNumber") String poNumber,
+			@RequestParam(value = "selectOnbehalf") String selectOnbehalf,
+			@RequestParam(value = "onBehalfAccount") String onBehalfAccount,
+			@RequestParam(value = "filter") String filter, HttpSession session) {
+
+		List<String> data = new ArrayList<>();
+		try {
+
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			Integer accountInfo = loginData.getAccountId();
+
+			AutoSearch autoSearch = new AutoSearch();
+
+			if (loginData.isSessionInfo()) {
+
+				autoSearch.setFilter(filter);
+				autoSearch.setSearchCriteria(poNumber);
+				autoSearch.setAccountInfo(accountInfo.toString());
+				autoSearch.setSelectType(selectOnbehalf);
+
+				data = (List<String>) autoSearchservice.getSearchByInfo(autoSearch);
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method autoOrderNumber() in controller InventoryMgmtController :" + e);
+		}
+
+		return data;
+	}
+
+	/**
+	 * 
+	 * @param productSelected
+	 * @param mvSelected
+	 * @return
+	 */
+	public int checKDuplicacy(String productSelected, String mvSelected) {
+		int check = 1;
+		String[] productArray = productSelected.split(",");
+		String[] mvArray = mvSelected.split(",");
+		String[] combination = new String[productArray.length];
+		for (int i = 0; i < productArray.length; i++) {
+			combination[i] = productArray[i] + mvArray[i];
+		}
+		List<String> productAndMv = Arrays.asList(combination);
+		for (String combinations : productAndMv) {
+			int frequency = java.util.Collections.frequency(productAndMv, combinations);
+			if (frequency > 1) {
+				check = 0;
+				return check;
+			}
+		}
+		return check;
+	}
+
+	/**
+	 * 
+	 * @param packingGroupData
+	 * @param session
+	 * @param request
+	 * @param menuId
+	 * @param submenuId
+	 * @param redirectAttributes
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/groupCreation", method = RequestMethod.GET)
+	public ModelAndView groupCreation(
+			@ModelAttribute(value = SystemConstant.PACKING_GROUP_DATA) PackingGroupData packingGroupData,
+			HttpSession session, HttpServletRequest request,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId,
+			RedirectAttributes redirectAttributes) throws Exception {
+		ModelMap map = new ModelMap();
+		PackingGroupData groupData = new PackingGroupData();
+		String view = null;
+		List<Products> products = new ArrayList<Products>();
+		try {
+			Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
+			if (flashMap != null) {
+				menuId = (Integer) flashMap.get("menuId");
+				submenuId = (Integer) flashMap.get("submenuId");
+			}
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Map<Integer, String> parentMap = iInventoryMgmtService.getGroupParent();
+				groupData.setParentDataList(parentMap);
+				products = iInventoryMgmtService.getProducts();
+				map.put("products", products);
+				map.addAttribute(SystemConstant.PACKING_GROUP_DATA, groupData);
+				map.addAttribute(SystemConstant.PARENT_DATA, parentMap);
+
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,211
+				view = "packingGroup";
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method groupCreation()  :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param packingGroupData
+	 * @param session
+	 * @param request
+	 * @param menuId
+	 * @param submenuId
+	 * @param redirectAttribute
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/groupCreationSubmit", method = RequestMethod.POST)
+	public String groupCreationSubmit(
+			@ModelAttribute(value = SystemConstant.PACKING_GROUP_DATA) PackingGroupData packingGroupData,
+			HttpSession session, HttpServletRequest request,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId,
+
+			RedirectAttributes redirectAttribute) throws Exception {
+		ModelMap map = new ModelMap();
+		PackingGroupData groupData = new PackingGroupData();
+		try {
+			LOGGER.info("**********Execution start of method groupCreation() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				boolean flag = iInventoryMgmtService.saveGroupData(packingGroupData);
+				redirectAttribute.addFlashAttribute("menuId", menuId);
+				redirectAttribute.addFlashAttribute("submenuId", submenuId);
+					redirectAttribute.addFlashAttribute("statusMessage", (flag)?"Group Created Successfully":getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+				Map<Integer, String> parentMap = iInventoryMgmtService.getGroupParent();
+				groupData.setParentDataList(parentMap);
+				map.addAttribute(SystemConstant.PACKING_GROUP_DATA, groupData);
+				map.addAttribute(SystemConstant.PARENT_DATA, parentMap);
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,214
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return "sessionExpire";
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method groupCreation() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+		}
+		return "redirect:groupCreation";
+	}
+
+	/*
+	 * @RequestMapping(value = "/groupCreationSubmit", method =
+	 * RequestMethod.POST) public ModelAndView groupCreationSubmit(
+	 * 
+	 * @ModelAttribute(value = SystemConstant.PACKING_GROUP_DATA)
+	 * PackingGroupData packingGroupData, HttpSession session,
+	 * HttpServletRequest request) throws Exception { ModelMap map = new
+	 * ModelMap(); PackingGroupData groupData = new PackingGroupData(); String
+	 * view = null; try { LOGGER.info(
+	 * "**********Execution start of method groupCreation() in controller InventoryMgmtController "
+	 * ); LoginData loginData = managemetImpl.getSessionInfo(session); if
+	 * (loginData.isSessionInfo()) {
+	 * 
+	 * boolean flag = iInventoryMgmtService.saveGroupData(packingGroupData); if
+	 * (flag) { packingGroupData.setGroupName(null);
+	 * packingGroupData.setParentType(null); packingGroupData.setQuantity(null);
+	 * packingGroupData.setProductType("0"); map.addAttribute("msgId",
+	 * "Group created Successfully"); } else { map.addAttribute("ermsgId",
+	 * getProperty(SystemConstant.NETWORK_ERROR_MESSAGE)); } view =
+	 * "packingGroup"; Map<Integer, String> parentMap =
+	 * iInventoryMgmtService.getGroupParent();
+	 * groupData.setParentDataList(parentMap);
+	 * map.addAttribute(SystemConstant.PACKING_GROUP_DATA, groupData);
+	 * map.addAttribute(SystemConstant.PARENT_DATA, parentMap); map =
+	 * addMapData(map, "190", "214", "", "");
+	 * 
+	 * } else { LOGGER.info(
+	 * "Session Expired on Execution of Method groupCreation() in controller InventoryMgmtController "
+	 * ); session.setAttribute(SystemConstant.ERRORSTATUSMESSAGE,
+	 * loginData.getStatusMessage()); return new
+	 * ModelAndView(loginData.getView(), map); } } catch (Exception e) { view =
+	 * SystemConstant.HOME_PAGE; LOGGER.info(
+	 * "EXCEPTION OCCURE ON Method groupCreation() in controller InventoryMgmtController :"
+	 * + e); map.addAttribute(SystemConstant.STATUS_MESSAGE,
+	 * getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+	 * 
+	 * } return new ModelAndView(view, map); }
+	 */
+	/**
+	 * 
+	 * @param packingGroupData
+	 * @param session
+	 * @param request
+	 * @param menuId
+	 * @param submenuId
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/groupCreationList", method = RequestMethod.GET)
+	public ModelAndView groupCreationList(
+			@ModelAttribute(value = SystemConstant.PACKING_GROUP_DATA) PackingGroupData packingGroupData,
+			HttpSession session, HttpServletRequest request,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) throws Exception {
+		ModelMap map = new ModelMap();
+		String view = null;
+		try {
+			LOGGER.info("**********Execution start of method groupCreation() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				List<PackingGroupData> parentMap = iInventoryMgmtService.getGroupList();
+				map.addAttribute(SystemConstant.GROUP_DATA_LIST, parentMap);
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,211
+				view = SystemConstant.GROUP_LIST;
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method groupCreation() in controller InventoryMgmtController :" + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param groupId
+	 * @param session
+	 * @param menuId
+	 * @param submenuId
+	 * @return
+	 */
+	@RequestMapping(value = "/groupEdit")
+	public ModelAndView groupEdit(@RequestParam(value = "groupId", required = false) Integer groupId,
+			HttpSession session, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) {
+		LOGGER.debug("*********** getBankList() starts executing in BankCreationController *************");
+		String view = null;
+		ModelMap map = new ModelMap();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				PackingGroupData data = iInventoryMgmtService.getGroupInfo(groupId);
+				if (data != null) {
+					Map<Integer, String> parentMap = iInventoryMgmtService.getGroupParent();
+					map.addAttribute(SystemConstant.PACKING_GROUP_DATA, data);
+					map.addAttribute(SystemConstant.PARENT_DATA, parentMap);
+					view = "groupEdit";
+				} else {
+					List<PackingGroupData> parentMap = iInventoryMgmtService.getGroupList();
+					map.addAttribute(SystemConstant.GROUP_DATA_LIST, parentMap);
+					map.addAttribute("errorMessage", "kindly try again.");
+					view = SystemConstant.GROUP_LIST;
+				}
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,211
+
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in getBankRegistration : " + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = "homepage";
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param packingGroupData
+	 * @param groupId
+	 * @param session
+	 * @param menuId
+	 * @param submenuId
+	 * @return
+	 */
+	@RequestMapping(value = "/groupEditSubmit")
+	public ModelAndView groupEditSubmit(
+			@ModelAttribute(value = SystemConstant.PACKING_GROUP_DATA) PackingGroupData packingGroupData,
+			@RequestParam(value = "groupId", required = false) Integer groupId, HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) {
+		LOGGER.debug("*********** bankCreationSubmit() starts executing in BankCreationController *************");
+		String view = "";
+		ModelMap map = new ModelMap();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				packingGroupData.setId(groupId);
+				boolean updateFlag = iInventoryMgmtService.updategroupData(packingGroupData);
+				if (updateFlag) {
+					List<PackingGroupData> parentMap = iInventoryMgmtService.getGroupList();
+					map.addAttribute(SystemConstant.GROUP_DATA_LIST, parentMap);
+					map.addAttribute("successMessage", packingGroupData.getGroupName() + " updated successfully");
+					view = SystemConstant.GROUP_LIST;
+				} else {
+					List<PackingGroupData> parentMap = iInventoryMgmtService.getGroupList();
+					map.addAttribute(SystemConstant.GROUP_DATA_LIST, parentMap);
+					map.addAttribute("errorMessage", "kindly try again.");
+					view = SystemConstant.GROUP_LIST;
+				}
+				map = addMapData(map, menuId, submenuId, "", ""); // 190,211
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in bankCreationSubmit : " + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = "homepage";
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param parentId
+	 * @return
+	 */
+	@RequestMapping(value = { "/getParentGroupSize", "/ajax/getParentGroupSize" }, method = RequestMethod.POST)
+	@ResponseBody
+	public Integer getParentGroupSize(@RequestParam(value = "parentId") String parentId) {
+		Integer products = null;
+		try {
+			products = iInventoryMgmtService.getgroupSize(Integer.parseInt(parentId));
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in getParentGroupSize() method " + ex);
+		}
+		return products;
+	}
+
+	/**
+	 * 
+	 * @param groupName
+	 * @return
+	 */
+	@RequestMapping(value = { "/checkGroupName", "/ajax/checkGroupName" }, method = RequestMethod.POST)
+	@ResponseBody
+	public Integer checkGroupName(@RequestParam(value = "groupName") String groupName) {
+		Integer products = null;
+		try {
+			products = iInventoryMgmtService.checkGroupName(groupName);
+
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in checkGroupName() method " + ex);
+		}
+		return products;
+	}
+
+	/**
+	 * get-groups
+	 * 
+	 * @param productType
+	 *
+	 * @return ResponseEntityUtil<PackingGroupData>
+	 */
+	@GetMapping(value = { "/get-groups", "/ajax/get-groups" })
+	@ResponseBody
+	public ResponseEntity<ResponseEntityUtil<PackingGroupData>> getGroupsByProductType(
+			@RequestParam("productType") String productType, @RequestParam("levelNumber") int levelNumber) {
+		ResponseEntity<ResponseEntityUtil<PackingGroupData>> responseEntity = null;
+		ResponseEntityUtil<PackingGroupData> response = null;
+		List<PackingGroupData> packagingGroupList = null;
+		try {
+
+			packagingGroupList = iInventoryMgmtService.getPackagingGroupByProductTypeAndLevelNumber(productType,
+					--levelNumber);
+			response = new ResponseEntityUtil<PackingGroupData>(packagingGroupList, "Success", 200,
+					ProductsTypeUtil.getProductsTypeDto(productType));
+			responseEntity = new ResponseEntity<ResponseEntityUtil<PackingGroupData>>(response, HttpStatus.OK);
+
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in getGroupsByProductType() method " + ex.getMessage());
+			response = new ResponseEntityUtil<PackingGroupData>(packagingGroupList, "Server error", 500,
+					ProductsTypeUtil.getProductsTypeDto(productType));
+			responseEntity = new ResponseEntity<ResponseEntityUtil<PackingGroupData>>(response,
+					HttpStatus.EXPECTATION_FAILED);
+		}
+		return responseEntity;
+	}
+
+	/**
+	 * 
+	 * @param textval
+	 * @param product
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/getGrouping", "/ajax/getGrouping" }, method = RequestMethod.POST)
+	@ResponseBody
+	public Map getOverlayProduct(@RequestParam(value = "textval") Integer textval,
+			@RequestParam(value = "product") String product) {
+		Map<String, String> products = null;
+		try {
+			products = iInventoryMgmtService.getGroupingForShipping(textval, product);
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in getOverlayProduct() method " + ex.getMessage());
+		}
+		return products;
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param mv
+	 * @param product
+	 * @param groupType
+	 * @return
+	 */
+	@RequestMapping(value = { "/getPackages", "/ajax/getPackages" }, method = RequestMethod.POST)
+	@ResponseBody
+	public List<BankData> getPackages(HttpSession session, @RequestParam(value = "mv") Integer mv,
+			@RequestParam(value = "product") Integer product, @RequestParam(value = "groupType") String groupType) {
+		List<BankData> products = null;
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			String groupCode = loginData.getGroupCode();
+			Integer accountId = loginData.getAccountId();
+
+			products = iInventoryMgmtService.getPackagesForShipping(mv, product, groupType, groupCode, accountId);
+		} catch (Exception ex) {
+			LOGGER.debug("Exception caught in getOverlayProduct() method " + ex.getMessage());
+		}
+		return products;
+	}
+
+	/**
+	 * 
+	 * @param poNumber
+	 * @param filter
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping(value = { "/autoOrderNumbernew", "/ajax/autoOrderNumbernew" })
+	@ResponseBody
+	public List<String> autoOrderNumbernew(@RequestParam(value = "poNumber") String poNumber,
+			@RequestParam(value = "filter") String filter, HttpSession session) {
+
+		List<String> data = new ArrayList<>();
+		try {
+
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			Integer accountInfo = loginData.getAccountId();
+			AutoSearch autoSearch = new AutoSearch();
+			if (loginData.isSessionInfo()) {
+				autoSearch.setFilter(filter);
+				autoSearch.setSearchCriteria(poNumber);
+				autoSearch.setAccountInfo(accountInfo.toString());
+				data = (List<String>) autoSearchservice.getSearchByInfo(autoSearch);
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method autoOrderNumber() in controller InventoryMgmtController :" + e);
+		}
+
+		return data;
+	}
+
+	/**
+	 * 
+	 * @param tagName
+	 * @param selectType
+	 * @param filter
+	 * @param session
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = { "/getTagsnew", "/ajax/getTagsnew" }, method = RequestMethod.GET)
+	@ResponseBody
+	public List<String> getTagnew(@RequestParam(value = "tagName") String tagName,
+			@RequestParam(value = "select_type") String selectType, @RequestParam(value = "filter") String filter,
+			HttpSession session) {
+
+		List<String> data = new ArrayList<>();
+		try {
+			LOGGER.info("**********Execution start of method getTag() in controller InventoryMgmtController ");
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			AutoSearch autoSearch = new AutoSearch();
+
+			if (loginData.isSessionInfo()) {
+				Integer accountInfo = loginData.getAccountId();
+				String groupCode = loginData.getGroupCode();
+				autoSearch.setFilter(filter);
+				autoSearch.setAccountInfo(accountInfo.toString());
+				autoSearch.setSearchCriteria(groupCode);
+				autoSearch.setSelectType(selectType);
+				autoSearch.setTagName(tagName);
+				data = (List<String>) autoSearchservice.getSearchByInfo(autoSearch);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("EXCEPTION OCCURE ON Method getTag() in controller InventoryMgmtController :" + e);
+		}
+		return data;
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param invoicenumber
+	 * @param product
+	 * @param masterversion
+	 * @param mainseriesto
+	 * @param ordernumber
+	 * @param orderdate
+	 * @param invoicedate
+	 * @param mainseriesfrom
+	 * @param productCode
+	 * @param mvcode
+	 * @return
+	 */
+	@RequestMapping(value = { "/generateQRcode", "/ajax/generateQRcode" }, method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, String> generateQRcode(HttpSession session,
+			@RequestParam(value = "invoicenumber", required = false) String invoicenumber,
+			@RequestParam(value = "product", required = false) String product,
+			@RequestParam(value = "masterversion", required = false) String masterversion,
+			@RequestParam(value = "mainseriesto", required = false) String mainseriesto,
+			@RequestParam(value = "ordernumber", required = false) String ordernumber,
+			@RequestParam(value = "orderdate", required = false) String orderdate,
+			@RequestParam(value = "invoicedate", required = false) String invoicedate,
+			@RequestParam(value = "mainseriesfrom", required = false) String mainseriesfrom,
+			@RequestParam(value = "productCode", required = false) String productCode,
+			@RequestParam(value = "mvcode", required = false) String mvcode,
+			@RequestParam(value = "packageId", required = false) String packageId) 
+	{
+		 Map<String, String> response=new HashMap<>();
+		String qrImageUrl = platformLoginData.getQrUrl();
+
+		String qrImageName = null;
+
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData != null && loginData.isSessionInfo()) {
+				Integer accountInfo = loginData.getAccountId();
+				String groupCode = loginData.getGroupCode();
+				product = product.replaceAll(" ", "_");
+				String qrFileName = new StringBuilder().append("QR-").append("ON_").append(ordernumber).append("-PRO_")
+						.append(product).append("-SHIP_BY_").append(groupCode).append("-SHIP_BY_ID_")
+						.append(accountInfo).append(".png").toString();
+
+				File qrFile = new File(platformLoginData.getQrPath());
+
+				String qrString =  new StringBuilder( productCode).append("|").append( mvcode).append("|").append(mainseriesfrom).append("|").append(mainseriesto).append("|")
+						.append(ordernumber).append( "|").append( invoicedate).append("|").append( invoicenumber).append( "|").append(orderdate).append( "|").append(packageId).toString();
+				response.put("qrString", qrString);
+				qrImageName = createQRImage(qrFile, qrString, 121, "png", 1, qrFileName);
+				response.put("qrImageUrl", qrImageUrl+qrImageName);
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return response;
+		
+		//return (qrImageName != null) ? new StringBuilder(qrImageUrl).append(qrImageName).toString() : null;
+
+	}
+
+	/**
+	 * 
+	 * @param qrFile
+	 * @param qrCodeText
+	 * @param size
+	 * @param filetype
+	 * @param id
+	 * @param qrFileName
+	 * @return
+	 * @throws WriterException
+	 * @throws IOException
+	 */
+	public static String createQRImage(File qrFile, String qrCodeText, int size, String filetype, Integer id,
+			String qrFileName) throws WriterException, IOException {
+		String generatedQrFileName = null;
+		Hashtable hintMap = new Hashtable();
+		hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+		QRCodeWriter qrCodeWriter = new QRCodeWriter();
+		BitMatrix byteMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, size, size, hintMap);
+
+		int matrixWidth = byteMatrix.getWidth();
+		BufferedImage img = new BufferedImage(matrixWidth, matrixWidth, BufferedImage.TYPE_INT_RGB);
+		img.createGraphics();
+		Graphics2D graphics = (Graphics2D) img.getGraphics();
+		graphics.setColor(Color.WHITE);
+		graphics.fillRect(0, 0, matrixWidth, matrixWidth);
+		graphics.setColor(Color.BLACK);
+
+		for (int i = 0; i < matrixWidth; i++) {
+			for (int j = 0; j < matrixWidth; j++) {
+				if (byteMatrix.get(i, j))
+					graphics.fillRect(i, j, 1, 1);
+			}
+		}
+		// qrFileName = new StringBuilder().append("QR-").append("") .append(new
+		// Date().getTime()).append(id) .append( "-") .append(size).append("." +
+		// filetype).toString();
+		File fileOut = new File(qrFile +File.separator + qrFileName);
+		ImageIO.write(img, filetype, fileOut);
+		
+		// byte[] qrByte = convertToByteArray(fileOut);
+		convertToByteArray(fileOut);
+		generatedQrFileName = qrFileName;
+		return generatedQrFileName;
+	}
+
+	/**
+	 * 
+	 * @param fileOut
+	 * @return
+	 */
+	private static byte[] convertToByteArray(File fileOut) {
+		byte[] bytes = null;
+		try (FileInputStream fis = new FileInputStream(fileOut.toString());
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();) {
+			byte[] buf = new byte[1024];
+			for (int readNum; (readNum = fis.read(buf)) != -1;) {
+				bos.write(buf, 0, readNum);
+			}
+			bytes = bos.toByteArray();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return bytes;
+	}
+
+	/*
+	 * private static byte[] convertToByteArray(File fileOut) { byte[] bytes =
+	 * null; try { File file = new File(fileOut.toString());
+	 * 
+	 * FileInputStream fis = new FileInputStream(file); ByteArrayOutputStream
+	 * bos = new ByteArrayOutputStream(); byte[] buf = new byte[1024];
+	 * 
+	 * for (int readNum; (readNum = fis.read(buf)) != -1;) { // Writes to this
+	 * byte array output stream bos.write(buf, 0, readNum); }
+	 * 
+	 * bytes = bos.toByteArray(); } catch (IOException ex) {
+	 * ex.printStackTrace(); } return bytes; }
+	 */
+	/**
+	 * 
+	 * @param productType
+	 * @param session
+	 * @return
+	 */
+	@GetMapping(value = { "/get-product-vendors", "/ajax/get-product-vendors" })
+	public @ResponseBody ResponseEntity<ResponseEntityUtil<AccountList>> getProductVendors(
+			@RequestParam(value = "productType", required = true) String productType, HttpSession session) {
+		LOGGER.info("**********Execution start of method getProductVendors() in controller InventoryMgmtController ");
+		ResponseEntity<ResponseEntityUtil<AccountList>> responseEntity = null;
+		ResponseEntityUtil<AccountList> response = null;
+		List<AccountList> vendorList = new ArrayList<AccountList>();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Products products = iInventoryMgmtService.getProductByName(productType);
+				Integer sysAccountGroupId = aIAccountCreationService.findSysaccountId(SystemConstant.VENDOR_GROUP_CODE);
+				vendorList = iInventoryMgmtService.getVendorList(products.getId(), sysAccountGroupId, productType);
+				response = new ResponseEntityUtil<AccountList>(vendorList, "SUCCESS", 200,
+						ProductsTypeUtil.getProductsTypeDto(products.getType()));
+				responseEntity = new ResponseEntity<ResponseEntityUtil<AccountList>>(response, HttpStatus.OK);
+
+			} else {
+				response = new ResponseEntityUtil<AccountList>(vendorList, "UNAUTHORIZED", 401,
+						ProductsTypeUtil.getProductsTypeDto(null));
+				responseEntity = new ResponseEntity<ResponseEntityUtil<AccountList>>(response, HttpStatus.UNAUTHORIZED);
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("**********Exception occure on method getProductVendors() in controller InventoryMgmtController ");
+			response = new ResponseEntityUtil<AccountList>(vendorList, "SERVER ERROR", 500,
+					ProductsTypeUtil.getProductsTypeDto(null));
+			responseEntity = new ResponseEntity<ResponseEntityUtil<AccountList>>(response,
+					HttpStatus.INTERNAL_SERVER_ERROR);
+
+		}
+
+		return responseEntity;
+
+	}
+
+	/**
+	 * 
+	 * @param productType
+	 * @param session
+	 * @return
+	 */
+	@GetMapping(value = { "/get-products-type-details", "/ajax/get-products-type-details" })
+	public @ResponseBody ResponseEntity<ResponseEntityUtil<AccountList>> getProductTypeDetails(
+			@RequestParam(value = "productType", required = true) String productType, HttpSession session) {
+		LOGGER.info("**********Execution start of method getProductVendors() in controller InventoryMgmtController ");
+		ResponseEntity<ResponseEntityUtil<AccountList>> responseEntity = null;
+		ResponseEntityUtil<AccountList> response = null;
+		List<AccountList> accList=null;
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+
+				Products products = iInventoryMgmtService.getProductByName(productType);
+				response = new ResponseEntityUtil<AccountList>(accList, "Success", 200,
+						ProductsTypeUtil.getProductsTypeDto(products.getType()));
+				responseEntity = new ResponseEntity<ResponseEntityUtil<AccountList>>(response, HttpStatus.OK);
+			} else {
+				response = new ResponseEntityUtil<AccountList>(accList, "UNAUTHORIZED", 401,
+						ProductsTypeUtil.getProductsTypeDto(productType));
+				responseEntity = new ResponseEntity<ResponseEntityUtil<AccountList>>(response, HttpStatus.UNAUTHORIZED);
+			}
+		} catch (Exception e) {
+			LOGGER.info("**********Exception occure on method getProductsTypeDetails() in controller InventoryMgmtController ");
+			response = new ResponseEntityUtil<AccountList>(accList, "SERVER ERROR", 500,
+					ProductsTypeUtil.getProductsTypeDto(productType));
+			responseEntity = new ResponseEntity<ResponseEntityUtil<AccountList>>(response,
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		return responseEntity;
+
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @return
+	 */
+	@GetMapping(value = { "/get-product", "/ajax/get-products" })
+	public @ResponseBody ResponseEntity<ResponseEntityUtil<Products>> getProductVendors(HttpSession session) {
+		LOGGER.info("**********Execution start of method getProductVendors() in controller InventoryMgmtController ");
+
+		ResponseEntity<ResponseEntityUtil<Products>> responseEntity = null;
+		ResponseEntityUtil<Products> response = null;
+		List<Products> productList = new ArrayList<Products>();
+
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				productList = iInventoryMgmtService.getProducts();
+				response = new ResponseEntityUtil<Products>(productList, "SUCCESS", 200);
+				responseEntity = new ResponseEntity<ResponseEntityUtil<Products>>(response, HttpStatus.OK);
+			} else {
+				response = new ResponseEntityUtil<Products>(productList, "UNAUTHORIZED", 401);
+				responseEntity = new ResponseEntity<ResponseEntityUtil<Products>>(response, HttpStatus.OK);
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("**********Exception occure on method getProductVendors() in controller InventoryMgmtController ");
+			response = new ResponseEntityUtil<Products>(productList, "SERVER ERROR", 500);
+			responseEntity = new ResponseEntity<ResponseEntityUtil<Products>>(response,
+					HttpStatus.INTERNAL_SERVER_ERROR);
+
+		}
+
+		return responseEntity;
+
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param productType
+	 * @return
+	 */
+	@GetMapping(value = { "/get-max-level", "/ajax/get-max-level" })
+	public @ResponseBody ResponseEntity<ResponseEntityUtil<PackingGroupData>> getMaxLevel(HttpSession session,
+			@RequestParam("productType") String productType) {
+		LOGGER.info("**********Execution start of method getMaxLevel() in controller InventoryMgmtController ");
+
+		ResponseEntity<ResponseEntityUtil<PackingGroupData>> responseEntity = null;
+		ResponseEntityUtil<PackingGroupData> response = null;
+		PackingGroupData productList = null;
+
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				productList = iInventoryMgmtService.getMaxGroupLevelByProductType(productType);
+				response = new ResponseEntityUtil<PackingGroupData>(productList, "SUCCESS", 200);
+				responseEntity = new ResponseEntity<ResponseEntityUtil<PackingGroupData>>(response, HttpStatus.OK);
+
+			} else {
+				response = new ResponseEntityUtil<PackingGroupData>(productList, "UNAUTHORIZED", 401);
+				responseEntity = new ResponseEntity<ResponseEntityUtil<PackingGroupData>>(response, HttpStatus.OK);
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("**********Exception occure on method getProductVendors() in controller InventoryMgmtController ");
+			response = new ResponseEntityUtil<PackingGroupData>(productList, "SERVER ERROR", 500);
+			responseEntity = new ResponseEntity<ResponseEntityUtil<PackingGroupData>>(response,
+					HttpStatus.INTERNAL_SERVER_ERROR);
+
+		}
+
+		return responseEntity;
+
+	}
+
+	/**
+	 * 
+	 * @param packingGroupData
+	 * @param session
+	 * @param menuId
+	 * @param submenuId
+	 * @return
+	 */
+	@RequestMapping(value = "/packagingHierarchy")
+	public ModelAndView packagingHierarchy(
+			@ModelAttribute(value = SystemConstant.PACKING_GROUP_DATA) PackingGroupData packingGroupData,
+			HttpSession session, @RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId) {
+		LOGGER.debug("*********** packagingHierarchy() starts executing in Controller *************");
+		String view = "";
+		ModelMap map = new ModelMap();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				List<InventoryMgmtData<?>> list = iInventoryMgmtService.getPackagingGroupHierarchy();
+				map.addAttribute("list", list);
+				map.addAttribute(SystemConstant.MENU_ID, menuId); // 217
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				view = "packagingHierarchy";
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in packagingHierarchy : " + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = "homepage";
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param ordernumber
+	 * @return
+	 */
+
+	@RequestMapping(value = { "/viewOrderDetails", "/ajax/viewOrderDetails" })
+	public @ResponseBody List<InventoryMgmtData<?>> viewOrderDetails(HttpSession session,
+			@RequestParam("ordernumber") String ordernumber) {
+		LOGGER.info("**********Execution start of method getMaxLevel() in controller InventoryMgmtController ");
+
+		List<InventoryMgmtData<?>> list = null;
+
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				list = iInventoryMgmtService.getDetailsOfOrder(ordernumber);
+			}
+
+		} catch (Exception e) {
+			LOGGER.info("**********Exception occure on method getProductVendors() in controller InventoryMgmtController ");
+
+		}
+
+		return list;
+
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param menuId
+	 * @param submenuId
+	 * @param shippingId
+	 * @return
+	 */
+	@RequestMapping(value = "/getPackagingDetails")
+	public ModelAndView getPackagingDetails(HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId,
+			@RequestParam("shippingId") Integer shippingId) {
+		LOGGER.debug("*********** packagingHierarchy() starts executing in Controller *************");
+		String view = "";
+		ModelMap map = new ModelMap();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				InventoryMgmtData<?> inventoryMgmtData = iInventoryMgmtService.getPackagingDetailsById(shippingId);
+				map.addAttribute("inventoryMgmtData", inventoryMgmtData);
+				map.addAttribute(SystemConstant.MENU_ID, menuId); // 217
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				view = "packing";
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+			}
+		} catch (Exception e) {
+			LOGGER.info("Exception occured in packagingHierarchy : " + e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = "homepage";
+		}
+		return new ModelAndView(view, map);
+	}
+
+	/**
+	 * 
+	 * @param session
+	 * @param menuId
+	 * @param submenuId
+	 * @param ordernumber
+	 * @return
+	 */
+	@GetMapping(value = "/proceed-to-generate-qr-code")
+	public ModelAndView proceedToGenerateQrCode(HttpSession session,
+			@RequestParam(value = "menuId", required = false) Integer menuId,
+			@RequestParam(value = "submenuId", required = false) Integer submenuId,
+			@RequestParam("shippingId") Integer shippingId) {
+		LOGGER.info("*********** packagingHierarchy() starts executing in Controller *************");
+		String view = "";
+		ModelMap map = new ModelMap();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				InventoryMgmtData<?> inventoryMgmtData = iInventoryMgmtService.getPackagingDetailsById(shippingId);
+				map.addAttribute("inventoryMgmtData", inventoryMgmtData);
+				map.addAttribute(SystemConstant.MENU_ID, menuId); // 217
+				map.addAttribute(SystemConstant.SUBMENU_ID, submenuId);
+				view = "proceed-to-generate-qr-code";
+			} else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView("sessionExpire", null);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Exception occured in packagingHierarchy : " + e,e);
+			map.addAttribute(SystemConstant.STATUS_MESSAGE, getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			view = "homepage";
+		}
+		return new ModelAndView(view, map);
+	}
+
+	@PostMapping(value = { "/generate-qr-code", "/ajax/generate-qr-code" })
+	public @ResponseBody Map<String, Object> generateQRForAll(HttpSession session,
+			@RequestBody InventoryMgmtData<String> inventoryData) {
+		String qrImageUrl = platformLoginData.getQrUrl();
+		Map<String, Object> responseObj = new HashMap<String, Object>();
+		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		String qrImageName = null;
+
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+
+			if (loginData.isSessionInfo()) {
+				Integer accountInfo = loginData.getAccountId();
+				String groupCode = loginData.getGroupCode();
+				for (String qrStringItr : inventoryData.getDataObjList()) {
+					Map<String, String> response = new HashMap<String, String>();
+					String[] qrArray = qrStringItr.split("#");
+					String productName = qrArray[6].replaceAll(" ", "_");
+					String qrFileName = new StringBuilder().append("QR-").append("ON_").append(qrArray[0])
+							.append("-PRO_").append(productName).append("-SHIP_BY_").append(groupCode)
+							.append("-SHIP_BY_ID_").append(accountInfo).append("-SERIES_").append(qrArray[4])
+							.append(qrArray[5]).append(".png").toString();
+
+					File qrFile = new File(platformLoginData.getQrPath());
+
+					// Order
+					// order=iInventoryMgmtService.getOrderDetailByOrder(boxInfo[8]);
+
+					String qrString = new StringBuilder().append(qrArray[8]).append( "|").append( qrArray[9]).append( "|") .append(qrArray[4])
+							.append("|").append( qrArray[5]).append( "|")
+							.append( qrArray[0]).append( "|").append( qrArray[3])
+							.append( "|").append( qrArray[1]).append( "|").append( qrArray[2]).toString();
+
+					qrImageName = createQRImage(qrFile, qrString, 121, "png", 1, qrFileName);
+					response.put("qrString", qrStringItr);
+					response.put("url", new StringBuilder(qrImageUrl).append(qrImageName).toString());
+					list.add(response);
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error("Exception occured in generateQRForAll() : " + e,e);
+			e.printStackTrace();
+		}
+
+		responseObj.put("responseObj", list);
+		return responseObj;
+	}
+
+	@PostMapping(value = { "/generate-download-qr-code", "/ajax/generate-download-qr-code" })
+	public @ResponseBody Map<String, Object> generateQRForInPdf(HttpSession session,
+			@RequestBody InventoryMgmtData<String> inventoryData) {
+		Map<String, Object> responseObj = new HashMap<String, Object>();
+		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		try {
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) {
+				Integer accountInfo = loginData.getAccountId();
+				String groupCode = loginData.getGroupCode();
+				iInventoryMgmtService.generateQrPdf(inventoryData, groupCode, accountInfo);
+			}
+		} catch (Exception e) {
+			LOGGER.error("Exception occured in generateQRForInPdf : " + e,e);
+			e.printStackTrace();
+		}
+		responseObj.put("responseObj", list);
+		return responseObj;
+	}
+}

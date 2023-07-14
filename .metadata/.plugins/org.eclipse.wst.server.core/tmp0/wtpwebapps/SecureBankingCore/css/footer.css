@@ -1,0 +1,10 @@
+
+.footer {
+    background-color:#c10000;
+    
+    background: -moz-linear-gradient(#2a2c2f, #c10000);
+  background: -o-linear-gradient(#2a2c2f, #c10000);
+  background: -ms-linear-gradient(#2a2c2f, #c10000);
+  background: linear-gradient(#2a2c2f, #c10000);
+    align:center
+}

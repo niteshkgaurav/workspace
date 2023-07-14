@@ -1,0 +1,532 @@
+package com.ng.sb.controller;
+
+import java.sql.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.ServletContextAware;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.ng.sb.common.controller.ASecureBankingController;
+import com.ng.sb.common.dataobject.LoginData;
+import com.ng.sb.common.dataobject.PortalEditData;
+import com.ng.sb.common.dataobject.PortalRegistrationData;
+import com.ng.sb.common.dataobject.SysCommissionConfigurationData;
+import com.ng.sb.common.dataobject.TransactionReportData;
+import com.ng.sb.common.util.SystemConstant;
+import com.ng.sb.service.IAccountCreationService;
+import com.ng.sb.service.ICommissionService;
+import com.ng.sb.service.IPortalService;
+import com.ng.sb.service.ISessionService;
+
+@Controller
+@RequestMapping(value="/portalCreation")
+public class PortalRegistrationController extends ASecureBankingController implements ServletContextAware {
+	private static final Logger LOGGER = LoggerFactory.getLogger(PortalRegistrationController.class);
+	private ModelMap maps = new ModelMap();
+	private String views=null;
+	LoginData loginDatas=null;
+	@Autowired
+	private ISessionService managemetImpl;
+	@Autowired
+	@Qualifier("messageSource")
+	private MessageSource systemMessageSource;
+	
+	
+	
+	@Autowired
+	private IPortalService iPortalService;
+	@Autowired
+	private IAccountCreationService accountCreationService;
+    ServletContext context;
+    @Autowired
+	private ICommissionService iCommissionService;
+     @Override
+	public void setServletContext(ServletContext servletContext) {
+		this.context = servletContext;
+	}
+ private ModelMap addMap(String menuId,String submenuId,String successmsg ,String errormsg  )
+	{
+	 maps.addAttribute(SystemConstant.MENU_ID,menuId);
+	 maps.addAttribute(SystemConstant.SUBMENU_ID,submenuId);
+	 maps.addAttribute(SystemConstant.SUCCESSMESSAGE,successmsg);
+	 maps.addAttribute(SystemConstant.ERRORMESSAGE, errormsg);
+		return maps;
+		
+	}
+	@RequestMapping(value="/createPortal")
+	public ModelAndView getPortalRegistration(@ModelAttribute(value="portalRegistrationData") PortalRegistrationData portalRegistrationData, HttpSession session
+			,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		LOGGER.debug("*********** getPortalRegistration() starts executing in PortalRegistrationController *************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+			
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));
+				portalRegistrationData.setCountryMap(iPortalService.getCountries());
+				portalRegistrationData.setCommissionMap(iPortalService.getCommission());
+				maps.addAttribute(SystemConstant.PORTAL_REG_DATA, portalRegistrationData);
+				views=SystemConstant.PORTAL_REG_LIST;
+		PortalRegistrationData portalRegistrationData2 = portalRegistrationData;
+		portalRegistrationData2.getCompanyName();
+		
+        				
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			views = SystemConstant.HOME_PAGE;
+			
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			LOGGER.info("Exception occured in getPortalRegistration() : "+e);
+			
+		}
+		return new ModelAndView(views,maps);
+	}
+	
+	
+
+	@RequestMapping(value={"/checkDuplicateEncryptionKey","/ajax/checkDuplicateEncryptionKey"})
+	@ResponseBody public  Integer checkDuplicateEncryptionKey(@RequestParam(value="encryptionKeyId")String encryptionKey)
+	{
+		int count =0;
+		LOGGER.info("Execution start of checkDuplicateEncryptionKey() mehtod in PortalRegistrationController");
+		try
+		{
+
+			count = iPortalService.checkDuplicateKey(encryptionKey);
+		}catch(Exception ex)
+		{
+			LOGGER.error("Exception occured in checkDuplicateEncryptionKey() method in PortalRegistrationController--->"+ex.getMessage());
+			LOGGER.info(""+ex);
+		}
+		LOGGER.info("Execution end of checkDuplicateEncryptionKey() mehtod in PortalRegistrationController");
+		return count;
+	}
+
+
+	@RequestMapping(value={"/checkDuplicateTemplateName","/ajax/checkDuplicateTemplateName"})
+	@ResponseBody public  Integer checkDuplicateTemplateName(@RequestParam(value="templateName")String templateName)
+	{
+		int count =0;
+		LOGGER.info("Execution start of checkDuplicateTemplateName() mehtod in PortalRegistrationController");
+		try
+		{
+			count = iPortalService.checkDuplicatetemplateName(templateName);
+		}catch(Exception ex)
+		{
+			LOGGER.error("Exception occured in checkDuplicateTemplateName() method in PortalRegistrationController--->"+ex.getMessage());
+			LOGGER.info(""+ex);
+		}
+		LOGGER.info("Execution end of checkDuplicateTemplateName() mehtod in PortalRegistrationController");
+		return count;
+	}
+	@RequestMapping(value="/portalCreationSubmit")
+	public ModelAndView getPortalCreationSubmit(@ModelAttribute(value="portalRegistrationData") PortalRegistrationData portalRegistrationData,@RequestParam(value="portalurls",required=false)String portalurls, HttpSession session
+			,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		LOGGER.debug("*********** getPortalCreationSubmit() starts executing in BulkIssuanceController *************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				views=SystemConstant.PORTAL_REG_LIST;
+				Integer userLoginId = loginDatas.getUserLoginId();
+				Boolean response=iPortalService.submitPortalDetails(portalRegistrationData,portalurls,userLoginId);
+				PortalEditData portalEditData=iPortalService.getPortalDetails();
+				maps.addAttribute(SystemConstant.PORTAL_EDIT_DATA,portalEditData);
+				if(response)
+				{
+					maps.addAttribute(SystemConstant.PORTAL_REG_DATA, portalRegistrationData);
+					maps.addAttribute(SystemConstant.SUCCESSMESSAGE,"Successfully Created");
+					maps.addAttribute(SystemConstant.ERR_MSG,"");
+				}
+				else
+				{
+					maps.addAttribute(SystemConstant.ERR_MSG,"Kindly try again");
+					maps.addAttribute(SystemConstant.SUCCESSMESSAGE,"");
+				}
+				maps.addAttribute(SystemConstant.PORTAL_REG_DATA, new PortalRegistrationData());
+				
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"","")); //148,140
+				
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getPortalCreationSubmit() : "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			views = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(views,maps);
+	}
+
+	@RequestMapping(value={"/getStates","/ajax/getStates"},method=RequestMethod.POST)
+	@ResponseBody public  PortalRegistrationData getStates(HttpSession session,@RequestParam(value="countryId")Integer countryId){
+		PortalRegistrationData portalRegistrationData=new PortalRegistrationData();
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				portalRegistrationData.setStateMap(accountCreationService.getState(countryId));
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getStates "+e);
+		}
+		return portalRegistrationData;
+	}
+
+	@RequestMapping(value="/getPortalCreationEdit")
+	public ModelAndView getPortalCreationEdit(HttpServletRequest request,HttpSession session,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		LOGGER.debug("*********** getPortalCreationSubmit() starts executing in BulkIssuanceController *************");
+		try{
+			LoginData loginData=managemetImpl.getSessionInfo(session);
+			if(loginData.isSessionInfo()){
+			PortalEditData portalEditData;
+				portalEditData=iPortalService.getPortalDetails();
+				maps.addAttribute(SystemConstant.PORTAL_EDIT_DATA,portalEditData);
+				
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//148,140
+				views=SystemConstant.PORTAL_REG_LIST;
+			}
+			else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getIssuanceDetailsSubmit : "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			views = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(views,maps);
+	}
+
+	@RequestMapping(value="/updatePortalEdit", method = RequestMethod.GET)
+	public ModelAndView updateCommTempEdit(HttpServletRequest request,Model model,HttpSession session,@RequestParam(value="editMessage",required=false)String editMessage,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){
+		String view = "";
+		LOGGER.info("****Start  method updateCommTempEdit() in SystemSetting Controller for creating updateCommTempEdit");
+		PortalRegistrationData portalRegistrationData  = new PortalRegistrationData();  
+		maps.addAttribute(SystemConstant.LOGINDATA, session.getAttribute(SystemConstant.LOGINDATA));
+		try {
+			Integer portalId=Integer.parseInt(request.getParameter(SystemConstant.PORTAL_ID));
+			LoginData loginData = managemetImpl.getSessionInfo(session);
+			if (loginData.isSessionInfo()) { 
+				
+
+					portalRegistrationData=iPortalService.getPortalDetailsForUpdate(portalRegistrationData, portalId);
+					portalRegistrationData.setCountryMap(iPortalService.getCountries());
+					portalRegistrationData.setCommissionMap(iPortalService.getCommission());
+					maps.addAttribute(SystemConstant.PORTAL_REG_DATA, portalRegistrationData);
+					maps.addAttribute(SystemConstant.PORTAL_ID, portalRegistrationData.getId());
+					
+					maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//148,140
+					view = "PortelUpdateEdit";
+					LOGGER.info("****Method createProductCat() Execution end in SystemSetting Controller");
+				
+			}
+			else {
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		} catch (Exception e) {
+			LOGGER.info("**** Exception occured in Method createProductCat() "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			LOGGER.info("Exception occured in updateCommTempEdit : "+e.getLocalizedMessage());
+			view = SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(view, maps);
+	}
+
+	@RequestMapping(value="/portalEditSubmit", method = RequestMethod.POST)
+	public ModelAndView portalEditSubmit(HttpServletRequest request,@ModelAttribute(value="portalRegistrationData") PortalRegistrationData portalRegistrationData,@RequestParam(value="portalurls",required=false)String portalurls, HttpSession session
+			,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId)
+	{
+		LOGGER.debug("*********** portalEditSubmit() starts executing in BulkIssuanceController *************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+		      PortalEditData portalEditData = null;
+			if(loginDatas.isSessionInfo()){
+				views=SystemConstant.PORTAL_REG_LIST;
+				Integer portalId=Integer.valueOf(request.getParameter(SystemConstant.PORTAL_ID));
+				Boolean response=iPortalService.updatePortalDetails(portalRegistrationData,portalId,portalurls);
+				if(response)
+				{
+					maps.addAttribute(SystemConstant.SUCCESSMESSAGE,"Updated Successfully");
+
+					portalEditData=iPortalService.getPortalDetails();
+				}
+				else
+				{
+					maps.addAttribute(SystemConstant.ERR_MSG,"Kindly try again");
+				}
+				maps.addAttribute(SystemConstant.PORTAL_EDIT_DATA, portalEditData);
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//148,140
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception ex)
+		{
+			LOGGER.info("Exception occured in portalEditSubmit : "+ex);
+
+		}
+		return new ModelAndView(views, maps);
+	}
+
+
+	@RequestMapping(value={"/checkDuplicateAccount","/ajax/checkDuplicateAccount"},method=RequestMethod.POST)
+	@ResponseBody public  PortalRegistrationData checkDuplicateAccount(HttpSession session,@RequestParam(value="companyName")String companyName){
+		LOGGER.debug("*********** checkDuplicateAccount() starts executing in PortalRegistrationController *************");
+		PortalRegistrationData portalRegistrationData= new PortalRegistrationData();
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				portalRegistrationData.setCompanyName(companyName);
+				boolean flag=iPortalService.checkDuplicateAccount(portalRegistrationData);
+				portalRegistrationData.setFlag(flag);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in checkDuplicateAccount : "+e);
+			portalRegistrationData.setFlag(false);
+		}
+		return portalRegistrationData;
+	}
+
+	@RequestMapping(value={"/checkDuplicatecompanyUrl","/ajax/checkDuplicatecompanyUrl"},method=RequestMethod.POST)
+	@ResponseBody public  PortalRegistrationData checkDuplicatecompanyUrl(HttpSession session,@RequestParam(value="companyUrl")String companyUrl){
+		LOGGER.debug("*********** checkDuplicatecompanyUrl() starts executing in PortalRegistrationController *************");
+		PortalRegistrationData portalRegistrationData= new PortalRegistrationData();
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				portalRegistrationData.setCompanyUrl(companyUrl);
+				boolean flag=iPortalService.checkDuplicateUrl(portalRegistrationData);
+				portalRegistrationData.setFlag(flag);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in checkDuplicatecompanyUrl : "+e);
+			portalRegistrationData.setFlag(false);
+		}
+		return portalRegistrationData;
+	}
+
+	@RequestMapping(value="/getTransactionReport")
+	public ModelAndView getTransactionReport(@ModelAttribute(value="transactionReportData") TransactionReportData transactionReportData, HttpSession session
+			,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		LOGGER.debug("*********** getTransactionReport() starts executing in PortalRegistrationController *************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				views="pinTransactionReport";
+				Map<Integer,String>portalName=iPortalService.getPortalName();
+				transactionReportData.setPortalName(portalName);
+				maps.addAttribute("transactionReportData", transactionReportData);
+				maps.addAttribute(SystemConstant.ERR_MSG, "");
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//138,143
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getTransactionReport : "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			views =SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(views,maps);
+	}
+
+	@RequestMapping(value={"/getTransactionDetails","/ajax/getTransactionDetails"})
+	@ResponseBody public List<TransactionReportData> getTransactionDetails(@RequestParam(value = "fromDate") Date fromDate,@RequestParam(value = "endDate") Date endDate,@RequestParam(value = "portalName") String portalName, HttpSession session){	
+		LOGGER.debug("*********** issuanceDetailsSubmit() starts executing in BulkIssuanceController *************");
+		List<TransactionReportData> transactionReportDatas=null;
+		Integer portalId;
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				if("".equals(portalName))
+				{
+					transactionReportDatas=iPortalService.getTransactionReportList(new java.util.Date(fromDate.getTime()),new java.util.Date(endDate.getTime()),0);
+				}
+				else
+				{	
+					portalId= Integer.parseInt(portalName);
+				
+					transactionReportDatas=iPortalService.getTransactionReportList(new java.util.Date(fromDate.getTime()),new java.util.Date(endDate.getTime()),0,portalId);  
+				}
+				
+			}
+			else{
+				views=SystemConstant.LOGIN_PAGE;
+				maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.SESSION_NOT_VALID));
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in sendSubsRegistration : "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			views = SystemConstant.HOME_PAGE;
+		}
+		return transactionReportDatas;
+	}
+
+	@RequestMapping(value={"/getPinDetail","/ajax/getPinDetail"})
+	@ResponseBody public  List<TransactionReportData> getPinDetail(@RequestParam(value = "fromDate") Date fromDate,@RequestParam(value = "endDate") Date endDate,@RequestParam(value = "portalName") String portalName,@RequestParam(value = "idValue") Integer idValue, HttpSession session){	
+		LOGGER.debug("*********** issuanceDetailsSubmit() starts executing in BulkIssuanceController *************");
+		List<TransactionReportData> transactionReportDatas=null;
+		Integer portalId;
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				if("".equals(portalName))
+				{
+					transactionReportDatas=iPortalService.getTransactionReportList(new java.util.Date(fromDate.getTime()),new java.util.Date(endDate.getTime()),idValue);
+				}
+				else
+				{	
+					portalId= Integer.parseInt(portalName);
+					transactionReportDatas=iPortalService.getTransactionReportList(new java.util.Date(fromDate.getTime()),new java.util.Date(endDate.getTime()),idValue,portalId);
+				}
+			}
+			else{
+				views=SystemConstant.LOGIN_PAGE;
+				maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.SESSION_NOT_VALID));
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in sendSubsRegistration : "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			views = SystemConstant.HOME_PAGE;
+		}
+		return transactionReportDatas;
+	}
+
+
+	@RequestMapping(value="/getPortalCommission")
+	public ModelAndView getPortalCommission(HttpServletRequest request,
+			HttpServletResponse response,@ModelAttribute(value="sysCommissionConfigurationData") SysCommissionConfigurationData sysCommissionConfigurationData, HttpSession session
+			,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		LOGGER.debug("*********** getPortalCommission() starts executing in PortalRegistrationController *************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				views=SystemConstant.PORTAL_COMMISSION;
+				maps.addAttribute("sysCommissionConfigurationData", sysCommissionConfigurationData);
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//148,146
+				maps.addAttribute(SystemConstant.ERR_MSG, "");
+				
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getPortalCommission : "+e);
+			maps.addAttribute(SystemConstant.STATUS_MESSAGE,getProperty(SystemConstant.NETWORK_ERROR_MESSAGE));
+			views =SystemConstant.HOME_PAGE;
+		}
+		return new ModelAndView(views,maps);
+	}
+	
+	
+	
+	
+
+
+	
+	@RequestMapping(value="/getPortalCommissionList")
+	public ModelAndView getPortalCommissionEdit(HttpServletRequest request,
+			HttpServletResponse response, HttpSession session,@ModelAttribute(value="portalEditData") PortalEditData portalEditData
+			,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		
+		LOGGER.debug("*********** getCommissionProductMappingPost() starts executing in controller*************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			if(loginDatas.isSessionInfo()){
+				views="portalCommissionList";
+				PortalEditData portalEditData1=iPortalService.getPortalDetails();
+				maps.addAttribute("portalEditData",portalEditData1);
+				maps.addAttribute("comMap",iCommissionService.getCommissionListMap());
+				maps.addAttribute(SystemConstant.ERR_MSG, "");
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//148,149
+				maps.addAttribute(SystemConstant.SUCCESSMESSAGE, "");
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getPortalCommissionEdit : "+e.getLocalizedMessage());
+			LOGGER.info(""+e);
+			views = SystemConstant.HOME_PAGE;
+		}
+		
+		return new ModelAndView(views,maps);
+	}
+	
+	@RequestMapping(value="/getPortalCommissionList",method=RequestMethod.POST)
+	public ModelAndView getPortalCommissionEditPost(HttpServletRequest request,
+			HttpServletResponse response, HttpSession session,@ModelAttribute(value="portalEditData") PortalEditData portalEditData,
+			@RequestParam(value="commissionId")Integer commissionId,@RequestParam(value="menuId",required=false)Integer menuId,@RequestParam(value="submenuId",required=false)Integer submenuId){	
+		
+		LOGGER.debug("*********** getCommissionProductMappingPost() starts executing in controller*************");
+		try{
+			loginDatas = managemetImpl.getSessionInfo(session);
+			Integer userLoginId = loginDatas.getUserLoginId();
+			if(loginDatas.isSessionInfo()){
+				views="portalCommissionList";
+				
+				String[] portalIds=portalEditData.getPortalId().split(",");
+				iPortalService.addPortalCommissionMapping(portalIds,commissionId,userLoginId);
+				PortalEditData portalEditData1=iPortalService.getPortalDetails();
+				maps.addAttribute("portalEditData",portalEditData1);  
+				maps.addAttribute("comMap",iCommissionService.getCommissionListMap());
+				maps.addAttribute(SystemConstant.ERR_MSG, "");
+				maps.addAllAttributes(addMap(menuId.toString(),submenuId.toString(),"",""));//148,149
+				maps.addAttribute(SystemConstant.SUCCESSMESSAGE, "");
+			}
+			else{
+				session.setAttribute(SystemConstant.STATUS_MESSAGE, SystemConstant.SESSION_NOT_VALID);
+				return new ModelAndView(SystemConstant.SESSION_EXPIRE, null);
+			}
+		}
+		catch(Exception e){
+			LOGGER.info("Exception occured in getPortalCommissionEdit : "+e.getLocalizedMessage());
+			LOGGER.info(""+e);
+			views = SystemConstant.HOME_PAGE;
+		}
+		
+		return new ModelAndView(views,maps);
+	}
+	
+
+}

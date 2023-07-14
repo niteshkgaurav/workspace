@@ -1,0 +1,404 @@
+	
+	//*******Global variables********//
+
+var winCal;
+var dtToday=new Date();
+var Cal;
+var docCal;
+var MonthName=["January", "February", "March", "April", "May", "June","July","August", "September", "October", "November", "December"];
+var WeekDayName=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+	//*******Configurable parameters *********//
+
+var cnTop="200";			//top coordinate of calendar window.
+var cnLeft="500";			//left coordinate of calendar window
+var WindowTitle ="DateTime Picker";	//Date Time Picker title.
+var WeekChar=2;				//number of character for week day. if 2 then Mo,Tu,We. if 3 then Mon,Tue,Wed.
+var CellWidth=20;			//Width of day cell.
+var DateSeparator="-";			//Date Separator, you can change it to "/" if you want.
+var TimeMode=24;			//default TimeMode value. 12 or 24
+var ShowLongMonth=true;			//Show long month name in Calendar header. example: "January".
+var ShowMonthYear=true;			//Show Month and Year in Calendar header.
+var MonthYearColor="#0147FA"; //cc0033		//Font Color of Month and Year in Calendar header.
+var WeekHeadColor="#4F94CD";		//Background Color in Week header.
+var SundayColor="#7EC0EE";		//Background color of Sunday.
+var SaturdayColor="#B0E2FF";		//Background color of Saturday.
+var WeekDayColor="#c6d9f1";		//Background color of weekdays.
+var FontColor="blue";			//color of font in Calendar day cell.
+var TodayColor="#6495ED";		//Background color of today.
+var SelDateColor="#3063A5";		//Backgrond color of selected date in textbox.
+var YrSelColor="#FF6600";		//color of font of Year selector.
+var ThemeBg="";				//Background image of Calendar window.
+	
+	//end Configurable parameters
+	//end Global variable
+
+function newDatePicker(pCtrl)
+{
+	//alert(pCtrl);
+	Cal=new Calendar(dtToday);
+	//alert(dtToday);
+	Cal.Ctrl=pCtrl;
+	//Cal.Format="DDMMYYYY".toUpperCase();
+	Cal.Format="YYYYMMDD";
+	exDateTime=document.getElementById(pCtrl).value;
+	
+	if(exDateTime!="")//Parse Date String
+	{
+		var strMonth;
+		var strDate;
+		var strYear;
+		var intMonth;
+		var YearPattern;
+		//parse month
+		Sp1=exDateTime.indexOf(DateSeparator,0)
+		//alert(Sp1);
+		Sp2=exDateTime.indexOf(DateSeparator,(parseInt(Sp1)+1));
+		strMonth=exDateTime.substring(Sp1+1,Sp2);
+		strDate=exDateTime.substring(Sp2+1);
+		if(isNaN(strMonth))
+			intMonth=Cal.GetMonthIndex(strMonth);
+		else
+			intMonth=parseInt(strMonth,10)-1;
+		if ((parseInt(intMonth,10)>=0) && (parseInt(intMonth,10)<12))
+		Cal.Month=intMonth;
+		//end parse month
+		//parse Date
+		if ((parseInt(strDate,10)<=Cal.GetMonDays()) && (parseInt(strDate,10)>=1))
+			Cal.Date=strDate;
+		//end parse Date
+		//parse year
+		strYear=exDateTime.substring(0,Sp1);
+		YearPattern=/^\d{4}$/;
+		if (YearPattern.test(strYear))
+			Cal.Year=parseInt(strYear,10);
+		//end parse year
+		tSp1=exDateTime.indexOf(":",0)
+		tSp2=exDateTime.indexOf(":",(parseInt(tSp1)+1));
+		strHour=exDateTime.substring(tSp1,(tSp1)-2);
+		Cal.SetHour(strHour);
+		strMinute=exDateTime.substring(tSp1+1,tSp2);
+		Cal.SetMinute(strMinute);
+		strSecond=exDateTime.substring(tSp2+1,tSp2+3);
+		Cal.SetSecond(strSecond);
+	}
+	winCal=window.open("","DatePicker","toolbar=0,status=0,menubar=0,fullscreen=0,width=195,height=242,resizable=0,location=0,top="+cnTop+",left="+cnLeft);
+	docCal=winCal.document;
+	
+	RenderCal();
+}
+
+function RenderCal()
+{
+	var vCalHeader;
+	var vCalData;
+	var vCalTime;
+	var i;
+	var j;
+	var SelectStr;
+	var vDayCount=0;
+	var vFirstDay;
+	
+	docCal.open();
+	docCal.writeln("<html><head><title>"+WindowTitle+"</title>");
+	docCal.writeln("<script>var winMain=window.opener;</script>");
+	docCal.writeln("</head><body bgColor='#c6d9f1' background='"+ThemeBg+"' link="+FontColor+" vlink="+FontColor+" style='font-size:8pt;'><form name='Calendar'>");
+
+	vCalHeader="<table border=1 style='font-size:8pt;' cellpadding=1 cellspacing=1 width='100%' align=\"center\" valign=\"top\">\n";
+	//Month Selector
+	vCalHeader+="<tr>\n<td colspan='7'><table border=0 width='100%' cellpadding=0 cellspacing=0><tr><td align='left'>\n";
+	vCalHeader+="<select name=\"MonthSelector\" onChange=\"javascript:winMain.Cal.SwitchMth(this.selectedIndex);winMain.RenderCal();\">\n";
+	for (i=0;i<12;i++)
+	{
+		if (i==Cal.Month)
+			SelectStr="Selected";
+		else
+			SelectStr="";
+		vCalHeader+="<option "+SelectStr+" value >"+MonthName[i]+"\n";
+	}
+	vCalHeader+="</select></td>";
+	//Year selector
+	var startYear = Cal.Year-50;
+	var endYear = Cal.Year + 20;
+	vCalHeader+="\n<td align='right'><select name=\"YearSelector\" onChange=\"javascript:winMain.Cal.SwitchYer(this.selectedIndex);winMain.RenderCal();\">\n";
+	for (i=startYear;i<endYear;i++)
+	{
+		if (i==Cal.Year)
+			SelectStr="Selected";
+		else
+			SelectStr="";
+		vCalHeader+="<option "+SelectStr+" value >"+i+"\n";
+	}
+	vCalHeader+="</select></td></tr></table></td>\n";
+	vCalHeader+="</tr>";
+	//Calendar header shows Month and Year
+	if (ShowMonthYear)
+		vCalHeader+="<tr><td colspan='7'><font face='Verdana' size='2' align='center' color='"+MonthYearColor+"'><b><center>"+Cal.GetMonthName(ShowLongMonth)+" "+Cal.Year+"</center></b></font></td></tr>\n";
+	//Week day header
+	vCalHeader+="<tr bgcolor="+WeekHeadColor+">";
+	for (i=0;i<7;i++)
+	{
+		vCalHeader+="<td align='center'><font face='Verdana' size='2'>"+WeekDayName[i].substr(0,WeekChar)+"</font></td>";
+	}
+	vCalHeader+="</tr>";
+	docCal.write(vCalHeader);
+
+	//Calendar detail
+	CalDate=new Date(Cal.Year,Cal.Month);
+	CalDate.setDate(1);
+	vFirstDay=CalDate.getDay();
+	vCalData="<tr>";
+	for (i=0;i<vFirstDay;i++)
+	{
+		vCalData=vCalData+GenCell();
+		vDayCount=vDayCount+1;
+	}
+	for (j=1;j<=Cal.GetMonDays();j++)
+	{
+		var strCell;
+		vDayCount=vDayCount+1;
+		if ((j==dtToday.getDate())&&(Cal.Month==dtToday.getMonth())&&(Cal.Year==dtToday.getFullYear()))
+			strCell=GenCell(j,true,TodayColor);//Highlight today's date
+		else
+		{
+			if (j==Cal.Date)
+			{
+				strCell=GenCell(j,true,SelDateColor);
+			}
+			else
+			{
+				if (vDayCount%7==0)
+					strCell=GenCell(j,false,SaturdayColor);
+				else if ((vDayCount+6)%7==0)
+					strCell=GenCell(j,false,SundayColor);
+				else
+					strCell=GenCell(j,null,WeekDayColor);
+				
+			}
+		}
+		vCalData=vCalData+strCell;
+
+		if((vDayCount%7==0)&&(j<Cal.GetMonDays()))
+		{
+			vCalData=vCalData+"</tr>\n<tr>";
+		}
+	}
+	docCal.writeln(vCalData);
+	var showHour;
+	showHour=Cal.getShowHour();		
+	vCalTime="<tr>\n<td colspan='7' align='center'>";
+	//vCalTime+="<select name='hour' bgcolor='#F4F4E4' onchange=\"javascript:winMain.Cal.SetHour(this.value);docCal.writeln(GenCell(null,null,null))\">";
+	/*vCalTime+="<select name='hour' bgcolor='#F4F4E4' onchange=\"javascript:winMain.Cal.SetHour(this.value)\">";
+	for(i=0;i<24;i++)
+	{
+		vCalTime+="<option value='"+i+"'";
+		if(i==showHour)
+		vCalTime+=" selected ";
+		vCalTime+=">"+((i<10)?"0":"")+i+"</option>";
+	}
+		vCalTime+=" </select>";
+		
+	vCalTime+="<select name='minute' onchange=\"javascript:winMain.Cal.SetMinute(this.value)\">";
+	for(i=0;i<60;i++)
+	{
+		vCalTime+="<option value='"+i+"'";
+		if(parseInt(i)==parseInt(Cal.Minutes))
+		vCalTime+=" selected ";
+		vCalTime+=">"+((i<10)?"0":"")+i+"</option>";
+	}
+		vCalTime+="</select>";
+		vCalTime+="<select name='second' onchange=\"javascript:winMain.Cal.SetSecond(this.value)\">";
+	for(i=0;i<60;i++)
+	{
+		vCalTime+="<option value='"+i+"'";
+		if(parseInt(i)==parseInt(Cal.Seconds))
+		vCalTime+=" selected ";
+		vCalTime+=">"+((i<10)?"0":"")+i+"</option>";
+	}
+	vCalTime+="</select>";*/
+
+	
+	docCal.write(vCalTime);
+	docCal.writeln("\n</table>");
+	docCal.writeln("</form></body></html>");
+	docCal.close();
+}
+
+function GenCell(pValue,pHighLight,pColor)//Generate table cell with value
+{
+	//alert(pValue);
+	var PValue;
+	var PCellStr;
+	var vColor;
+	var vHLstr1;//HighLight string
+	var vHlstr2;
+	var vTimeStr;
+
+	if (pValue==null)
+		PValue="";
+	else
+	{
+		PValue=pValue;
+	}
+	if (pColor!=null)
+		vColor="bgcolor=\""+pColor+"\"";
+	else
+		vColor="";
+	if ((pHighLight!=null)&&(pHighLight))
+		{vHLstr1="color='red'><b>";vHLstr2="</b>";}
+	else
+		{vHLstr1=">";vHLstr2="";}
+
+	vTimeStr="winMain.document.getElementById('"+Cal.Ctrl+"').value";
+	
+	PCellStr="<td "+vColor+" width="+CellWidth+" align='center'><font face='verdana' size='2'"+vHLstr1+"<a href=\"javascript: winMain.document.getElementById('"+Cal.Ctrl+"').value='"+Cal.FormatDate(PValue)+"';var sDate = winMain.document.getElementById('"+Cal.Ctrl+"').value; sMon= sDate.substring(sDate.indexOf('-')+1,sDate.lastIndexOf('-')); if(parseInt(sMon)<10) sMon='0'+sMon;  sDay=sDate.substring(sDate.lastIndexOf('-')+1); if(parseInt(sDay)<10) sDay='0'+sDay; sDate=sDate.substring(0,sDate.indexOf('-')+1) +sMon +'-'+ sDay;  winMain.document.getElementById('"+Cal.Ctrl+"').value=sDate;"+vTimeStr+";window.close();\">"+PValue+"</a>"+vHLstr2+"</font></td>";
+	
+	return PCellStr;
+}
+
+function Calendar(pDate,pCtrl)
+{
+	//Properties
+	this.Date=pDate.getDate();//selected date
+	this.Month=pDate.getMonth();//selected month number
+	this.Year=pDate.getFullYear();//selected year in 4 digits
+	this.Hours=pDate.getHours();			
+	//alert("from calendar==>"+this.Date);
+	if (pDate.getMinutes()<10)
+		this.Minutes="0"+pDate.getMinutes();
+	else
+		this.Minutes=pDate.getMinutes();
+
+	if (pDate.getSeconds()<10)
+		this.Seconds="0"+pDate.getSeconds();
+	else		
+	this.Seconds=pDate.getSeconds();
+			
+	this.MyWindow=winCal;
+	this.Ctrl=pCtrl;
+	//this.Format="ddMMyyyy";
+	this.Format="YYYYMMDD";
+	this.Separator=DateSeparator;
+	this.ShowTime=false;
+	
+}
+
+function GetMonthIndex(shortMonthName)
+{
+	for (i=0;i<12;i++)
+	{
+		if (MonthName[i].substring(0,3).toUpperCase()==shortMonthName.toUpperCase())
+		{	return i;}
+	}
+}
+Calendar.prototype.GetMonthIndex=GetMonthIndex;
+
+function IncYear()
+{	Cal.Year++;}
+Calendar.prototype.IncYear=IncYear;
+
+function DecYear()
+{	Cal.Year--;}
+Calendar.prototype.DecYear=DecYear;
+
+function SwitchMth(intMth)
+{	
+	
+	Cal.Month=intMth;
+}
+function SwitchYer(intMth)
+{
+	intMth=intMth-50;
+	Cal.Year=Cal.Year+intMth;
+}
+Calendar.prototype.SwitchMth=SwitchMth;
+Calendar.prototype.SwitchYer=SwitchYer;
+
+function SetHour(intHour)
+{	
+	var MaxHour;
+	var MinHour;
+	MaxHour=23;MinHour=0
+	var HourExp=new RegExp("^\\d$|^\\d\\d$");
+	if (HourExp.test(intHour) && (parseInt(intHour,10)<=MaxHour) && (parseInt(intHour,10)>=MinHour))
+	{	
+		Cal.Hours=parseInt(intHour,10);	
+	}
+}
+Calendar.prototype.SetHour=SetHour;
+
+function SetMinute(intMin)
+{
+	var MinExp=new RegExp("^\\d$|^\\d\\d$");
+	if (MinExp.test(intMin) && (intMin<60))
+		Cal.Minutes=intMin;
+	if (Cal.Minutes<10)
+		Cal.Minutes="0"+parseInt(Cal.Minutes,10);
+}
+Calendar.prototype.SetMinute=SetMinute;
+
+function SetSecond(intSec)
+{	
+	var SecExp=new RegExp("^\\d$|^\\d\\d$");
+	if (SecExp.test(intSec) && (intSec<60))
+		Cal.Seconds=intSec;
+	if (Cal.Seconds<10)
+		Cal.Seconds="0"+parseInt(Cal.Seconds,10);
+	
+}
+Calendar.prototype.SetSecond=SetSecond;
+
+function getShowHour()
+{
+	var finalHour;
+    	if (this.Hours<10)
+		finalHour="0"+parseInt(this.Hours,10);
+	else	
+		finalHour=this.Hours;
+	return finalHour;	
+}				
+Calendar.prototype.getShowHour=getShowHour;
+
+function GetMonthName(IsLong)
+{
+	var Month=MonthName[this.Month];
+	return Month;
+}
+Calendar.prototype.GetMonthName=GetMonthName;
+
+function GetMonDays()//Get number of days in a month
+{
+	var DaysInMonth=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+	if (this.IsLeapYear())
+	{
+		DaysInMonth[1]=29;
+	}
+	return DaysInMonth[this.Month];
+}
+Calendar.prototype.GetMonDays=GetMonDays;
+
+function IsLeapYear()
+{
+	if ((this.Year%4)==0)
+	{
+		if ((this.Year%100==0) && (this.Year%400)!=0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}
+Calendar.prototype.IsLeapYear=IsLeapYear;
+
+function FormatDate(pDate)
+{
+	return (this.Year+DateSeparator+(this.Month+1)+DateSeparator+pDate);
+}
+Calendar.prototype.FormatDate=FormatDate;
